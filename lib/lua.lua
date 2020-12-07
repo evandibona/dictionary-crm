@@ -3,43 +3,28 @@ local crm = {}
 local function intToStr( n ) return string.pack(">I4", n)   end
 local function strToInt( s ) return string.unpack(">I4", s) end
 
-local function getN( n ) return 0 end -- These two fx's are going to hold
-local function getL( n ) return 0 end -- what is now in "pullNext"
-local function pullNext( d, i )
+local function pullEntry( d, i )
   i = i + 1 or 1
-  local adr = strToInt( string.sub( d, i, i + 3 ) )
-  local node = false
-  if adr >= 2^31 then 
-    adr = adr - 2^31 
-    node = true
-  end
-  return { adr, node }
-end
-
-local function deconstruct( e )
-  local nA = pullNext( e, 0 )
-  entry = {
-    ["next"] = nA[1], 
-    ["node"] = nA[2],
-    ["date"] = strToInt( string.sub( e, 5, 8 ) ), 
-    ["location"] = ( nA[1] - #e )
-  }
-  if entry['node'] then
-    entry['label'] = string.sub( e, 9, #e )
+  local entry = {}
+  entry["next"] = strToInt( string.sub( d, i, i+3 ) )
+  entry["node"] = ( entry["next"] >= 2^31 )
+  entry["date"] = strToInt( string.sub( d, i+4, i+7 ) )
+  entry["location"] = ( entry["next"] - i )
+  if entry["node"] then
+    entry["next"] = entry["next"] - 2^31
+    entry['label'] = string.sub( d, i+8, entry["next"] )
   else
-    entry['parent'] = strToInt( string.sub( e, 9, 12 ) )
+      entry["parent"] = strToInt( string.sub ( d, i+8, i+11 ) )
+      entry["data"] = string.sub( d, i+12, entry["next"] )
   end
   return entry
 end
 
 local function forEachEntry( d, f )
-  local i = { 0, 0 }
-  local e = ""
-  while i[1] < #d do
-    i[2] = i[1]
-    i[1] = pullNext( d, i[1] )[1]
-    e = string.sub( d, i[2]+1, i[1] )
-    f(deconstruct(e))
+  local entry = pullEntry( d, 0 )
+  while entry['next'] < #d do
+    f(entry)
+    entry = pullEntry( d, entry["next"] )
   end
 end
 
@@ -78,7 +63,15 @@ function crm.locN( data, label )
 end
 
 function crm.printTree( data )
-  local nodes = { }
+  forEachEntry( data, 
+    function( entry ) 
+      if entry['node'] then
+        print( entry['label'] )
+      else
+        print( entry['data'] )
+      end
+    end 
+  )
 end
 
 
