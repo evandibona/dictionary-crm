@@ -52,11 +52,7 @@ db = crm.addL(db, leaf3_1)
 db = crm.addL(db, leaf3_2)
 db = crm.addL(db, leaf3_3)
 
-crm.printTree(db)
-
---[[
 local f  = io.open("data", "a")
   f:write(db)
   f:close()
---]]
 

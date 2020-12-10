@@ -9,14 +9,14 @@ local function pullEntry( d, i )
   entry["next"] = strToInt( string.sub( d, i, i+3 ) )
   entry["node"] = ( entry["next"] >= 2^31 )
   entry["date"] = strToInt( string.sub( d, i+4, i+7 ) )
-  entry["location"] = ( entry["next"] - i )
   if entry["node"] then
     entry["next"] = entry["next"] - 2^31
     entry['label'] = string.sub( d, i+8, entry["next"] )
   else
-      entry["parent"] = strToInt( string.sub ( d, i+8, i+11 ) )
-      entry["data"] = string.sub( d, i+12, entry["next"] )
+    entry["parent"] = strToInt( string.sub ( d, i+8, i+11 ) - 1 )
+    entry["data"] = string.sub( d, i+12, entry["next"] )
   end
+  entry["location"] = ( i )
   return entry
 end
 
@@ -62,15 +62,15 @@ function crm.locN( data, label )
   return loc
 end
 
-function crm.printTree( data )
-  forEachEntry( data, 
-    function( entry ) 
-      if entry['node'] then
-        print( entry['label'] )
-      else
-        print( entry['data'] )
+function crm.childrenOf( d, n )
+  forEachEntry( d, 
+    function( entry )
+      if not entry["node"] then
+        if entry['parent'] == n then
+          print( entry['data'] )
+        end
       end
-    end 
+    end
   )
 end
 
