@@ -1,30 +1,50 @@
 local crm = {}
 
-local function intToStr( n ) return string.pack(">I4", n)   end
+local function intToStr( n ) return   string.pack(">I4", n) end
 local function strToInt( s ) return string.unpack(">I4", s) end
 
 local function pullEntry( d, i )
   i = i + 1 or 1
-  local entry = {}
-  entry["next"] = strToInt( string.sub( d, i, i+3 ) )
-  entry["node"] = ( entry["next"] >= 2^31 )
-  entry["date"] = strToInt( string.sub( d, i+4, i+7 ) )
+  local entry = {} 
+  entry['loc']  = i - 1
+  entry['next'] = strToInt( string.sub( d, i, i+3 ) )
+  entry['node'] = ( entry["next"] >= 2^31 )
+  entry['date'] = strToInt( string.sub( d, i+4, i+7 ) )
   if entry["node"] then
     entry["next"] = entry["next"] - 2^31
     entry['label'] = string.sub( d, i+8, entry["next"] )
   else
-    entry["parent"] = strToInt( string.sub ( d, i+8, i+11 ) - 1 )
+    entry["parent"] = strToInt( string.sub( d, i+8, i+11 ) ) - 1 
     entry["data"] = string.sub( d, i+12, entry["next"] )
   end
-  entry["location"] = ( i )
   return entry
 end
 
 local function forEachEntry( d, f )
-  local entry = pullEntry( d, 0 )
-  while entry['next'] < #d do
-    f(entry)
+  local entry = {['next']=0}
+  while entry['next'] <= #d-1 do
     entry = pullEntry( d, entry["next"] )
+    f(entry)
+  end
+end
+
+function crm.forEachNode( d, f )
+  local entry = {['next']=0}
+  while entry['next'] <= #d-1 do
+    entry = pullEntry( d, entry['next'] )
+    if entry['node'] then
+      f( entry )
+    end
+  end
+end
+
+function crm.forEachLeaf( d, f )
+  local entry = {['next']=0}
+  while entry['next'] <= #d do
+    entry = pullEntry( d, entry['next'] )
+    if not entry['node'] then
+      f( entry )
+    end
   end
 end
 
@@ -51,11 +71,11 @@ function crm.addL( data, leaf )
 end
 
 function crm.locN( data, label )
-  local loc = 0 
-  forEachEntry( data, 
+  local loc = nil
+  crm.forEachNode( data, 
     function( entry )
-      if label == entry['label'] then
-        loc = entry['location']
+      if entry['label'] == label then
+        loc = entry['loc']
       end
     end
   )
@@ -74,5 +94,11 @@ function crm.childrenOf( d, n )
   )
 end
 
+function crm.slurp( l )
+  local f  = io.open( l )
+  local db = f:read("*a")
+  f:close()
+  return db
+end
 
 return crm
