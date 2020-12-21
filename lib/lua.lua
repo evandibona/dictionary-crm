@@ -14,7 +14,7 @@ local function pullEntry( d, i )
     entry["next"] = entry["next"] - 2^31
     entry['label'] = string.sub( d, i+8, entry["next"] )
   else
-    entry["parent"] = strToInt( string.sub( d, i+8, i+11 ) ) - 1 
+    entry["parent"] = strToInt( string.sub( d, i+8, i+11 ) ) 
     entry["data"] = string.sub( d, i+12, entry["next"] )
   end
   return entry
@@ -40,7 +40,7 @@ end
 
 function crm.forEachLeaf( d, f )
   local entry = {['next']=0}
-  while entry['next'] <= #d do
+  while entry['next'] <= #d-1 do
     entry = pullEntry( d, entry['next'] )
     if not entry['node'] then
       f( entry )
@@ -82,17 +82,19 @@ function crm.locN( data, label )
   return loc
 end
 
-function crm.childrenOf( d, n )
-  forEachEntry( d, 
+function crm.printChildren( d, node )
+  local nLoc = crm.locN(d, node )
+  print( node )
+
+  crm.forEachLeaf(d, 
     function( entry )
-      if not entry["node"] then
-        if entry['parent'] == n then
-          print( entry['data'] )
-        end
+      if nLoc == entry['parent'] then
+        print('  * '..entry['data'])
       end
     end
   )
 end
+
 
 function crm.slurp( l )
   local f  = io.open( l )

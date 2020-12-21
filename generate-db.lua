@@ -36,7 +36,6 @@ local db = ""
 leaf1_1[2] = crm.locN(db, "MrDimon"        )
 leaf2_1[2] = crm.locN(db, "Microsoft-CEO"  )
 leaf3_1[2] = crm.locN(db, "mr-chapek"      )
-print( leaf3_1[2] )
 
 leaf1_2[2] = leaf1_1[2]
 leaf2_2[2] = leaf2_1[2]
@@ -58,7 +57,7 @@ db = crm.addL(db, leaf3_3)
 
 -- Save to File 
 
-local f  = io.open("data.bin", "a")
+local f  = io.open("data.bin", "w")
   f:write(db)
   f:close()
 

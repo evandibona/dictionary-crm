@@ -8,15 +8,11 @@ crm.forEachNode(db,
     print( node.label )
   end
 )
-print('-----------------')
+print('-----------------\n')
 
-local ceoLoc = crm.locN(db, 'Microsoft-CEO')
-
-crm.forEachLeaf(db, 
-  function( entry )
-    print(entry['next'])
-  end
-)
+crm.printChildren(db, 'mr-chapek')
+crm.printChildren(db, 'MrDimon')
+crm.printChildren(db, 'Microsoft-CEO')
 
 -- Print each Leaf of a Node
 -- Import a CSV as a list of leaves to the dictionary. 
