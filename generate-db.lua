@@ -1,4 +1,4 @@
-crm = require("lib.lua")
+crm = require("./lib/crm.lua")
 
 node1 = { 1605848654, "MrDimon" }
 node2 = { 1606241133, "Microsoft-CEO" }
@@ -55,9 +55,12 @@ db = crm.addL(db, leaf3_1)
 db = crm.addL(db, leaf3_2)
 db = crm.addL(db, leaf3_3)
 
+
+print(db) 
+
 -- Save to File 
 
-local f  = io.open("data.bin", "w")
-  f:write(db)
-  f:close()
+--local f  = io.open("data.bin", "w")
+--  f:write(db)
+--  f:close()
 

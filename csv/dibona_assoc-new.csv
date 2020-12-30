@@ -1,0 +1,13 @@
+short,first-name,last-name,phone,email,company,company-ws,date,epoch,position,state,note
+beckett-allen,Beckett,Allen,6797852489,b.allen@pharmallc.com,"Pharma LLC",pharmallc.com,2020/12/06,1607261761,President,NC,"This is dummy data, 740."
+angelo-beltran,Angelo,Beltran,4961277136,a.beltran@jandj.com,"Johnson & Johnson",jandj.com,2020/12/06,1607246665,CEO,VA,"This is dummy data, 179."
+reina-ward,Reina,Ward,8687014792,r.ward@campingworld.com,"Camping World",campingworld.com,2020/12/07,1607349412,"Store Manager",VA,"This is dummy data, 867."
+elliott-haney,Elliott,Haney,6958539925,e.haney@ganderoutdoors.com,"Gander Outdoors",ganderoutdoors.com,2020/12/11,1607664388,"Store Manager",TN,"This is dummy data, 714."
+maggie-daniels,Maggie,Daniels,7175765160,m.daniels@jacksonsprings.com,"Jackson Springs LLC",jacksonsprings.com,2020/12/11,1607694029,Owner,NC,"This is dummy data, 294."
+justice-quinn,Justice,Quinn,5713820004,j.quinn@manuf-co.com,"Manufacturing & Co.",manuf-co.com,2020/12/11,1607717433,President,SC,"This is dummy data, 712."
+skyla-caldwell,Skyla,Caldwell,7003019121,s.caldwell@freedomroads.com,"Freedom Roads LLC",freedomroads.com,2020/12/11,1607702146,President,NC,"This is dummy data, 796."
+britney-potter,Britney,Potter,6992675540,b.potter@pointedparticlecompany.com,"Pointed Particle Co.",pointedparticlecompany.com,2020/12/15,1608053832,Co-Owner,NC,"This is dummy data, 360."
+mallory-ballard,Mallory,Ballard,1109704479,m.ballard@greysons.com,"Greyson's Lodge",greysons.com,2020/12/15,1608010984,COO,NC,"This is dummy data, 569."
+chaim-pruitt,Chaim,Pruitt,5644639251,c.pruitt@pharmallc.com,"Pharma LLC",pharmallc.com,2020/12/15,1608043592,"Head Manager",SC,"This is dummy data, 884."
+deegan-parks,Deegan,Parks,4851658877,d.parks@springhillmunitions.com,"Springhill Weapons",springhillmunitions.com,2020/12/15,1608009151,"Manuf. Manager",NC,"This is dummy data, 453."
+kinley-vance,Kinley,Vance,4040456167,k.vance@confederatepacking.com,"Confederate Packing Co.",confederatepacking.com,2020/12/16,1608120166,President,NC,"This is dummy data, 148."

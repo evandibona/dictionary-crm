@@ -84,7 +84,7 @@ end
 
 function crm.printChildren( d, node )
   local nLoc = crm.locN(d, node )
-  print( node )
+  print( "#"..node )
 
   crm.forEachLeaf(d, 
     function( entry )
