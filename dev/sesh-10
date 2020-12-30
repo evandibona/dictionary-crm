@@ -1,0 +1,56 @@
+Alright the next step for sure, is creating a console setup. 
+There are probably 1000 nicer and more clever GUIS, but they're
+never really worth the effort. And most of that is above my pay
+grade anyways. So console it is. 
+
+Any common attributes of a prospect that are important, should
+be pulled by recent first. Whether that is by searching in 
+reverse, or finding them all and picking the latest.  My vote is 
+for the former. 
+
+
+Data prefix. This could use a standard, general to specific. 
+  eg: email.work, first-name.informal, phone.cell, 
+      address.mailing, address.house
+hmm   name.first.informal, name.last
+      call.vm
+
+Linking couples and friends could be done by referencing 
+each other. When it comes down to it, there should really be only
+one decision maker. Spouses should be involved. 
+      "spouse:mr-doe"
+
+One customization I didn't foresee was the ability to have a 
+custom render scheme for each individual. That said, I could add a tag "render:with-spouse", or more simply. Just have a layer that keeps an eye out for individuals who have a spouse. 
+
+# Main Display.
+
+If I type in a node (by string or address), it should return
+a basic summary of the prospect. Maybe 10 typical properties, 
+along with the top 5 most recent leaves. 
+
+
+f find:     Search by string
+@ fetch:    Return the info of node/leaf at this address. 
+            Both raw and interpreted
+            Must be prepared with error handling. 
+! store:    Manually add an item, (May not implement)
+l list:     list every item possible. 
+            {0, 1, 2} all, nodes, or leaves
+v view:     Summary of the prospect
+            string or address
++ add node:Creates a new node and sets it as active. 
+> add leaf:Adds leaf with specified data for active node, using
+            the current time. 
+a active nd:Sets a node as the active one. 
+x delete:   "deletes" an entry by changing the reference adr. 
+  rebuild   Go through each entry one at a time and rebuild
+            the entire database. 
+: schedule: Add a note to the calendar as a reminder. 
+
+Telephone # formatting. 
+
+Next Phase:
+  CSV export a list of people to call. 
+  Reminders of who to call. 
+    File as a stack of dates and suggestions. 

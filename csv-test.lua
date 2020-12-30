@@ -21,6 +21,7 @@ for ix=2,#csvLines do
   for i=1,#split do
     if i==1 then
       db = crm.addN(db, {epoch, split[i]})
+      print(split[1]..", added on: "..os.date("%I:%M:%p %a in %B", epoch))
     elseif csvKey[i]=='epoch' then
     else 
       --Generate Leaf
@@ -29,7 +30,7 @@ for ix=2,#csvLines do
   end
 end
 
-local f  = io.open("data.db", "w")
-  f:write(db)
-  f:close()
+-- local f  = io.open("data.db", "w")
+--   f:write(db)
+--   f:close()
 
