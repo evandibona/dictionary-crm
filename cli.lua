@@ -1,11 +1,38 @@
-Preface: Not actual code yet
+-- Split String
 
-The date is taken from the moment these commands are executed. 
+function splitInput( str )
+  local ary = {}
+  for e in string.gmatch(str, "([^%s]+)") do
+    table.insert(ary, e)
+  end
+  return ary
+end
 
-node-add some-dude 
-leaf-add "email:some.dude@gmail.com"  -- adds w/ a nul value to node
+-- Table Tests
+local words = 
+{
+  ["a"]= function() print("Aye") end, 
+  ["b"]= function() print("Bee") end, 
+  ["c"]= function() print("See") end
+}
+local stack = {}
 
-to-node some-dude leaf-add "name:John Doe"
+-- Main - Loop --
 
-leaf-add -node some-dude "name:John Doe"
+while true do
+  for ix, word in 
+    pairs(splitInput(io.read('*l'))) do
+    if words[word] then
+      words[word](stack)
+    else
+      print("\t...not found.")
+    end
+  end
+end
 
+--[[
+  3 Input Types?
+    Word:  
+    String
+    Number
+--]]
