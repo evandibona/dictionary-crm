@@ -1,5 +1,3 @@
--- Split String
-
 function splitInput( str )
   local ary = {}
   for e in string.gmatch(str, "([^%s]+)") do
@@ -20,19 +18,15 @@ local stack = {}
 -- Main - Loop --
 
 while true do
-  for ix, word in 
-    pairs(splitInput(io.read('*l'))) do
-    if words[word] then
+  for ix, word in pairs(splitInput(io.read('*l'))) do
+    if words[word] ~= nil then
       words[word](stack)
+    elseif tonumber(word) ~= nil then
+      table.insert(stack, tonumber(word))
+    elseif #word > 3 then
+      table.insert(stack, word)
     else
       print("\t...not found.")
     end
   end
 end
-
---[[
-  3 Input Types?
-    Word:  
-    String
-    Number
---]]
