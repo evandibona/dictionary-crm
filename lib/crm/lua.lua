@@ -5,24 +5,28 @@ local function strToInt( s ) return string.unpack(">I4", s) end
 
 local function pullEntry( d, i )
   i = i + 1 or 1
-  local entry = {} 
-  entry['loc']  = i - 1
-  entry['next'] = strToInt( string.sub( d, i, i+3 ) )
-  entry['node'] = ( entry["next"] >= 2^31 )
-  entry['date'] = strToInt( string.sub( d, i+4, i+7 ) )
-  if entry["node"] then
-    entry["next"] = entry["next"] - 2^31
-    entry['label'] = string.sub( d, i+8, entry["next"] )
+  if i < #d then
+    local entry = {} 
+    entry['loc']  = i - 1
+    entry['next'] = strToInt( string.sub( d, i, i+3 ) )
+    entry['node'] = ( entry["next"] >= 2^31 )
+    entry['date'] = strToInt( string.sub( d, i+4, i+7 ) )
+    if entry["node"] then
+      entry["next"] = entry["next"] - 2^31
+      entry['label'] = string.sub( d, i+8, entry["next"] )
+    else
+      entry["parent"] = strToInt( string.sub( d, i+8, i+11 ) ) 
+      entry["data"] = string.sub( d, i+12, entry["next"] )
+    end
+    return entry
   else
-    entry["parent"] = strToInt( string.sub( d, i+8, i+11 ) ) 
-    entry["data"] = string.sub( d, i+12, entry["next"] )
+    print("  Index exceeds highest possible entry.")
   end
-  return entry
 end
 
 local function forEachEntry( d, f )
   local entry = {['next']=0}
-  while entry['next'] <= #d-1 do
+  while entry['next'] < #d-1 do
     entry = pullEntry( d, entry["next"] )
     f(entry)
   end
@@ -30,7 +34,7 @@ end
 
 function crm.forEachNode( d, f )
   local entry = {['next']=0}
-  while entry['next'] <= #d-1 do
+  while entry['next'] < #d-1 do
     entry = pullEntry( d, entry['next'] )
     if entry['node'] then
       f( entry )
@@ -40,7 +44,7 @@ end
 
 function crm.forEachLeaf( d, f )
   local entry = {['next']=0}
-  while entry['next'] <= #d-1 do
+  while entry['next'] < #d-1 do
     entry = pullEntry( d, entry['next'] )
     if not entry['node'] then
       f( entry )

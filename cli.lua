@@ -31,6 +31,14 @@ function printAry( s )
   end
 end
 
+function printNodes( d )
+  crm.forEachNode(d, 
+    function(node) 
+      print(node)
+    end
+  )
+end
+
 function xS( d )
   print("Database file to save as:")
   crm.save(io.read(), d)
@@ -42,15 +50,25 @@ local db = ""
 local state = true
 local words = 
 {
-  ['db'] = function() db = crm.slurp(stack[#stack]) end, 
-  ['x']  = function() state = false end, 
-  ['done']  = function() state = false xS( db )  end, 
+  ['+n'] = function() db = crm.addN(db, {os.time(), drops(stack)}) end, 
+  ['+l'] = function() db = crm.addL(db, {
+                                          os.time(),
+                                          crm.locN(db, stack[#stack-1]),
+                                          drops(stack)
+                                        }) 
+                                        drop(stack)
+                                        end,
   
   ['+'] = function() add(stack) end,
   ["d"] = function() drop(stack) end, 
 
-  [".s"]= function() printAry(stack) end, 
-  ["clr"]= function() stack = {} end
+  [".s"]=  function() printAry(stack) end, 
+  ['.db']= function() print(db) end, 
+  ['.N'] = function() printNodes(db) end,
+  ["clr"]= function() stack = {} end,
+  ['x']  = function() state = false end, 
+  ['db'] = function() db = crm.slurp(stack[#stack]) end, 
+  ['done'] = function() state = false xS( db )  end
 }
 
 -- Main - Loop --

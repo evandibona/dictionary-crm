@@ -33,6 +33,8 @@ local db = ""
         db = crm.addN(db, node2)
         db = crm.addN(db, node3)
 
+        db = crm.addN(db, {os.time(), "jocko"})
+
 leaf1_1[2] = crm.locN(db, "MrDimon"        )
 leaf2_1[2] = crm.locN(db, "Microsoft-CEO"  )
 leaf3_1[2] = crm.locN(db, "mr-chapek"      )
