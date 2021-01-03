@@ -98,9 +98,20 @@ end
 
 function crm.slurp( l )
   local f  = io.open( l )
-  local db = f:read("*a")
-  f:close()
+  local db = ""
+  if f then
+    db = f:read("*a")
+    f:close()
+  else
+    print("\tFile does not exist.")
+  end
   return db
+end
+
+function crm.save( n, d )
+  local f = io.open( n, 'w' )
+  f:write(d)
+  f:close()
 end
 
 return crm
