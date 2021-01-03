@@ -6,14 +6,25 @@ function splitInput( str )
   return ary
 end
 
+function printAry( s )
+  if s ~= nil then
+    for i, e in pairs(s) do
+      print("\t"..e)
+    end
+  end
+end
+
 -- Table Tests
+local stack = {}
 local words = 
 {
   ["a"]= function() print("Aye") end, 
   ["b"]= function() print("Bee") end, 
-  ["c"]= function() print("See") end
+  ["c"]= function() print("See") end,
+
+  [".s"]= function() printAry(stack) end, 
+  ["clr"]= function() stack = {} end
 }
-local stack = {}
 
 -- Main - Loop --
 
@@ -23,7 +34,7 @@ while true do
       words[word](stack)
     elseif tonumber(word) ~= nil then
       table.insert(stack, tonumber(word))
-    elseif #word > 3 then
+    elseif #word >= 3 then
       table.insert(stack, word)
     else
       print("\t...not found.")
