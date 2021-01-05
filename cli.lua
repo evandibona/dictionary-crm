@@ -34,7 +34,7 @@ end
 function printNodes( d )
   crm.forEachNode(d, 
     function(node) 
-      print(node)
+      print(node['label'])
     end
   )
 end
@@ -50,15 +50,11 @@ local db = ""
 local state = true
 local words = 
 {
-  ['+n'] = function() db = crm.addN(db, {os.time(), drops(stack)}) end, 
-  ['+l'] = function() db = crm.addL(db, {
-                                          os.time(),
-                                          crm.locN(db, stack[#stack-1]),
-                                          drops(stack)
-                                        }) 
-                                        drop(stack)
-                                        end,
-  
+  ['+n'] = function() db = crm.addN   (db, {os.time(), drops(stack)}) end, 
+  ['+l'] = function() db = addLeaf    (db, prefix) end, 
+  ['l+'] = function() db = addSecond  (db, prefix) end, 
+  ["s"] = function() nodeSummary(drops(stack)) end,
+
   ['+'] = function() add(stack) end,
   ["d"] = function() drop(stack) end, 
 

@@ -30,7 +30,7 @@ for ix=2,#csvLines do
   end
 end
 
--- local f  = io.open("data.db", "w")
---   f:write(db)
---   f:close()
+local f  = io.open("data.db", "w")
+  f:write(db)
+  f:close()
 
