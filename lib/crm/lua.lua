@@ -4,32 +4,33 @@ crm.db = ""
 local function intToStr( n ) return   string.pack(">I4", n) end
 local function strToInt( s ) return string.unpack(">I4", s) end
 
-local function pullEntry( d, i )
-  i = i + 1 or 1
-  if i < #d then
-    local entry = {} 
-    entry['loc']  = i - 1
-    entry['next'] = strToInt( string.sub( d, i, i+3 ) )
-    entry['node'] = ( entry["next"] >= 2^31 )
-    entry['date'] = strToInt( string.sub( d, i+4, i+7 ) )
-    if entry["node"] then
-      entry["next"] = entry["next"] - 2^31
-      entry['label'] = string.sub( d, i+8, entry["next"] )
+function crm.extract( a )
+  a = a + 1 or 1
+  if a < #crm.db then
+    local e = {}
+    e.addr     = a - 1
+    e.next     = strToInt( string.sub( crm.db,   a, a+3 ) )
+    e.date     = strToInt( string.sub( crm.db, a+4, a+7 ) )
+    e.isTrunk  = (  e['next'] >= 2^31  )
+    if e.isTrunk then
+      e.next   = e['next'] - 2^31
+      e.label  = string.sub( crm.db, a+8, e['next']  )
     else
-      entry["parent"] = strToInt( string.sub( d, i+8, i+11 ) ) 
-      entry["data"] = string.sub( d, i+12, entry["next"] )
+      e.parent = strToInt( string.sub( crm.db, a+8, a+11) ) 
+      e.data   = string.sub( crm.db, a+12, e['next'] )
     end
-    return entry
+    return e
   else
-    print("  Index exceeds highest possible entry.")
+    print("  Err: Address exceeds limits.")
   end
 end
 
-local function forEachEntry( d, f )
-  local entry = {['next']=0}
-  while entry['next'] < #d-1 do
-    entry = pullEntry( d, entry["next"] )
-    f(entry)
+function crm.forEachEntry( f )
+  local e = {}
+  e.next = 0
+  while e.next < #crm.db - 1 do
+    e = crm.extract( e.next )
+    f(e)
   end
 end
 
