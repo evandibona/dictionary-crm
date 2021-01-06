@@ -9,6 +9,29 @@ function splitInput( str )
   return ary
 end
 
+function processStrings( ss, ln )
+  local state = false
+  local ix = #ss + 1
+  local nl = ""
+  for i = 1, #ln do
+    local s = string.sub(ln, i, i)
+    if s == '"' then
+      state = not state
+      if state then 
+        ss[ix] = ""
+      else
+        ix = ix+1 
+      end
+    elseif state then
+      ss[ix] = ss[ix]..s
+    else
+      nl = nl..s
+    end
+  end
+  return nl
+end
+
+function dup( s ) s[#s+1] = s[#s] end
 function drop( s ) s[#s] = nil end
 function drops(s ) 
   local e = s[#s] 
@@ -44,33 +67,45 @@ function xS( d )
   crm.save(io.read(), d)
 end
 
--- Table Tests
+crm.slurp("data.db")
 local stack = {}
-local db = ""
+local sstack= {}
 local state = true
 local words = 
 {
-  ['+n'] = function() db = crm.addN   (db, {os.time(), drops(stack)}) end, 
-  ['+l'] = function() db = addLeaf    (db, prefix) end, 
-  ['l+'] = function() db = addSecond  (db, prefix) end, 
-  ["s"] = function() nodeSummary(drops(stack)) end,
+  ['a'] = function() end, --adjacent
+  ['s'] = function() end, --summary
+  ['d'] = function() end, --diagram
+  ['f'] = function() end, --find
+  ['j'] = function() end, --judge
+  ['k'] = function() end, --know
+  ['l'] = function() end, --lineage
+  [';'] = function() end, --print
 
-  ['+'] = function() add(stack) end,
-  ["d"] = function() drop(stack) end, 
+  ['+t'] = function() end,
+  ['+b'] = function() end,
+  ['+l'] = function() end,
 
-  [".s"]=  function() printAry(stack) end, 
-  ['.db']= function() print(db) end, 
-  ['.N'] = function() printNodes(db) end,
-  ["clr"]= function() stack = {} end,
+  ['+']    = function()  add(stack) end,
+  ["drop"] = function() drop(stack) end, 
+  ["dup"]  = function()  dup(stack) end, 
+
+  ["sdrop"]= function() drop(sstack) end, 
+  ["sdup"] = function()  dup(sstack) end, 
+
+  [".s"] = function() printAry(stack) end, 
+  [".ss"]= function() printAry(sstack) end, 
+  ["clr"]= function() stack = {} sstack = {} end,
   ['x']  = function() state = false end, 
-  ['db'] = function() db = crm.slurp(stack[#stack]) end, 
   ['done'] = function() state = false xS( db )  end
 }
 
 -- Main - Loop --
 
 while state do
-  for ix, word in pairs(splitInput(io.read('*l'))) do
+  local line = io.read('*l')
+  line = processStrings(sstack, line)
+  for ix, word in pairs(splitInput(line)) do
     if words[word] ~= nil then
       words[word](stack)
     elseif tonumber(word) ~= nil then
