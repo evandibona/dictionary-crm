@@ -30,8 +30,10 @@ j (judge)           k (know)          l (lineage)         ; (print)
 adjacent    > siblings. All with common parent. 
 summarize   > Recent Entries, name, phone, email, company, etc.
 diagram     > full graph of self and descendants, with ref numbers. 
+find        > Use stack string. 
 key         > get address for a string match with data. 
-judge       > breakdown of an entry, as human readable as possible. 
+judge       > ???
+know        > ???
 lineage     > parent, grandparent, dates. Or self & date. 
 
 
