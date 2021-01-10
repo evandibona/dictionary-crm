@@ -18,6 +18,10 @@ function crm.save( n )
   f:close()
 end
 
+local function limit( s, n )
+  if #s > n then s = string.sub(s, 1, n) end 
+  return s
+end
 local function intToStr( n ) return   string.pack(">I4", n) end
 local function strToInt( s ) return string.unpack(">I4", s) end
 
@@ -42,6 +46,19 @@ function crm.extract( a )
   else
     print("  Err: Address exceeds limits.")
   end
+end
+
+function crm.getAttributes( n )
+  local attr = { }
+  crm.forEachChildOf( n, 
+    function( c )
+      if string.find(c.data, ":") then
+        attr[string.match(c.data, "(.+):")] = 
+             string.match(c.data, ":(.+)")
+      end
+    end
+  )
+  return attr
 end
 
 function crm.forEachEntry( f )
@@ -198,11 +215,12 @@ function crm.printEntries( ary )
     if e.isTrunk then
       io.write("● "..e.addr.." : ")
     else
-      io.write("  ‒❥ "..e.addr.." : ")
+      io.write("  ∙ "..e.addr.." : ")
     end
     print(e.label or e.data)
   end
 end
+
 
 function crm.adjacent( node )
   node = crm.extract(node)
@@ -215,17 +233,42 @@ end
 
 function crm.summarize( node )
   node = crm.extract( node )
-  local str = node.label or node.data
-  if #str > 64 then str = string.sub(str, 1, 61).."..." end
-  print(node.addr.." : "..str.." : "..node.next)
--- 7 most recent entries
--- Points of contact
--- Location
+  local attr = crm.getAttributes( node.addr )
+  print('\n\t\t', attr['company'])
+  print("Address:      ", 
+    attr['address'], '    ', attr['city']..', '..attr['state']) 
+  print("Phone Number: ", attr['phone'], "\t\tEmail:        ", attr['email'])
+  print("Website:      ", attr['website'])
+  local ch = crm.childrenOf( node.addr )
+  print( "\n  ---- Recent Additions: ----" )
+  if #ch < 7 then
+    crm.printEntries( ch )
+  else
+    for i = #ch, #ch-6, -1 do
+      local e = crm.extract(ch[i])
+      print( e.addr.." : ", os.date( "%H:%M  %a %b %d, %Y", e.date ), 
+        limit(e.data,33) )
+    end
+  end
 end
 
 function crm.diagram( node )
-  crm.printEntries( { node } )
-  crm.printEntries( crm.childrenOf( node ) )
+  local n = crm.extract(node)
+  print( n.addr..' ● '..n.label )
+  local chilluns = crm.childrenOf( node )
+  for i=1,#chilluns do
+    local c = crm.extract(chilluns[i])
+    local granchilluns = crm.childrenOf( c.addr )
+    if #granchilluns == 0 then
+      print(c.addr..'   ‒❥ '..limit(c.data,64) )
+    else
+      print(c.addr..'  ‒‒ '..limit(c.data,64) )
+      for ix=1, #granchilluns do
+        local gc = crm.extract( granchilluns[ix] )
+        print(gc.addr..'     ❥ '..limit(gc.data,64) )
+      end
+    end
+  end
 end
 
 function crm.find( str )
@@ -259,6 +302,13 @@ end
 
 function crm.print( n )
   crm.printEntries( { n } )
+end
+
+function crm.info( node )
+  node = crm.extract( node )
+  local str = node.label or node.data
+  if #str > 64 then str = string.sub(str, 1, 61).."..." end
+  print(node.addr.." : "..str.." : "..node.next)
 end
 
 return crm

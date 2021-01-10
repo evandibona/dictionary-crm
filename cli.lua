@@ -1,3 +1,5 @@
+#!/usr/bin/lua5.3
+
 local csv = require('./lib/csv.lua')
 local crm = require('./lib/crm.lua')
 
@@ -31,6 +33,38 @@ function processStrings( ss, ln )
   return nl
 end
 
+function help()
+  print()
+    io.write("   +t  ( s -- ) +Trunk    ")
+    io.write("+t  ( n s -- ) +Branch\t")
+    io.write("+t  ( n s -- ) +Leaf\t")
+
+  print('\n')
+    io.write("  s  ( n -- )  Summarize\t\t")
+       print("  d  ( n -- )  Diagram\t\t")
+    io.write("  i  ( n -- )  Info\t\t")
+       print("  f  ( n -- )  Find\t\t")
+    io.write("  ;  ( n -- )  Print\t\t")
+       print("  @  ( n s -- )  Attribute of Tree\t\t")
+    io.write("  t  ( -- )  Print Trunk\t\t")
+       print("  r  ( -- )  Random Trunk\t\t")
+    io.write("  a  ( a -- )  Adjacent\t\t")
+       print("  l  ( n -- )  Lineage\t\t")
+    io.write("  k  ( ?? )  Judge\t\t")
+       print("  j  ( ?? )  Know\t\t")
+  print('\n\n')
+end
+
+function map()
+  print( "Trunks:  "..#crm.trunks() )
+end
+
+function randTrunk(s)
+  local ts = crm.trunks()
+  ts = ts[ math.random( 1, #ts ) ]
+  table.insert( s, ts )
+end
+
 function find( s )
   s[#s] = crm.find(s[#s]) 
 end
@@ -45,7 +79,15 @@ function addBranch( s )
 end
 
 function addLeaf( s, ss )
-  crm.addL( crm.addr( drops(s) ), drops(ss) )
+  crm.addL( drops(s), drops(ss) )
+end
+
+function attrOf( s )
+  local a = drops(s)
+  local p = drops(s)
+  for k, v in pairs( crm.getAttributes(p) ) do
+    if a==k then print( v ) end
+  end
 end
 
 
@@ -95,6 +137,11 @@ function printWords(a)
   print(s)
 end
 
+function exitSave()
+  crm.save("data.db")
+  return false
+end
+
 crm.open("data.db")
 local backup= crm.db
 local stack = {}
@@ -111,11 +158,16 @@ local words =
   ['l'] = function() one( stack, crm.lineage   ) end, 
   [';'] = function() one( stack, crm.print     ) end, 
 
+  ['i'] = function() one( stack, crm.info      ) end, 
+  ['m'] = function() map() end, 
+  ['r'] = function() randTrunk( stack ) end, 
   ['t'] = function() crm.printEntries( crm.trunks() ) end, 
 
   ['+t'] = function() addTrunk  ( stack ) end, 
   ['+b'] = function() addBranch ( stack ) end, 
   ['+l'] = function() addLeaf   ( stack, sstack ) end, 
+
+  ['@'] = function() attrOf( stack ) end,
 
   ['+']    = function()  add(stack) end,
   ["drop"] = function() drop(stack) end, 
@@ -125,12 +177,11 @@ local words =
   ["sdrop"]= function() drop(sstack) end, 
   ["sdup"] = function()  dup(sstack) end, 
 
-  [".s"] = function() printAry(stack) end, 
-  [".ss"]= function() printAry(sstack) end, 
-  ["clr"]= function() stack = {} sstack = {} end,
-  ['x']  = function() state = false end, 
-  ['done'] = function() state = false xS( db )  end, 
-  ['cancel'] = function() crm.db = backup crm.save('data.db') end
+  [".s"]    = function() printAry(stack) end, 
+  [".ss"]   = function() printAry(sstack) end, 
+  ["clr"]   = function() stack = {} sstack = {} end,
+  ['help']  = function() help() end, 
+  ['x']     = function()  state = false end, 
 }
 
 -- Main - Loop --
