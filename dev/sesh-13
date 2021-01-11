@@ -1,0 +1,26 @@
+This is clunky. I like aspects of the command language, but it's not good. 
+
+
+Let's say I want to add someone, his info, and a note. 
+
+company f dorian-gray +b
+  "first:Dorian 'Chuck'" +l
+  "last:Gray" +l
+  "phone:7037234306" +l
+  "address:123 Rainbows End" +l
+  "city:Pomona" +l "state:NV" +l
+  "email:j.gray@company.com" +l
+
+Tweaking the returns of +l helps. But it's still time-consuming to type. 
+How can this be improved? And how can it be more intuitive?
+
+company dorian-gray +employee
+  "Dorian" first "Gray" last
+  "7037234306" phone
+  "j.gray@company.com" email
+  "123 Rainbows End" address
+  "Pomona" city "NV" state
+
+Better, but quotes are still a pain. 
+
+The only solution I can see is a wizard. 

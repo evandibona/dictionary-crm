@@ -2,6 +2,11 @@
 
 local csv = require('./lib/csv.lua')
 local crm = require('./lib/crm.lua')
+local ext = { } 
+if arg[1] then
+  local ext = require(arg[1])
+end
+
 
 function splitInput( str )
   local ary = {}
@@ -35,24 +40,24 @@ end
 
 function help()
   print()
-    io.write("   +t  ( s -- ) +Trunk    ")
-    io.write("+t  ( n s -- ) +Branch\t")
-    io.write("+t  ( n s -- ) +Leaf\t")
+    io.write("   +t  ( s -- ) +Trunk   ")
+    io.write("+t  ( n s -- ) +Branch   ")
+    io.write("+t  ( n s -- ) +Leaf   ")
 
   print('\n')
-    io.write("  s  ( n -- )  Summarize\t\t")
+    io.write("  s  ( n -- )  Summarize\t")
        print("  d  ( n -- )  Diagram\t\t")
     io.write("  i  ( n -- )  Info\t\t")
        print("  f  ( n -- )  Find\t\t")
     io.write("  ;  ( n -- )  Print\t\t")
        print("  @  ( n s -- )  Attribute of Tree\t\t")
-    io.write("  t  ( -- )  Print Trunk\t\t")
-       print("  r  ( -- )  Random Trunk\t\t")
+    io.write("  t  ( -- )    Print Trunk\t")
+       print("  r  ( -- )    Random Trunk\t\t")
     io.write("  a  ( a -- )  Adjacent\t\t")
        print("  l  ( n -- )  Lineage\t\t")
-    io.write("  k  ( ?? )  Judge\t\t")
-       print("  j  ( ?? )  Know\t\t")
-  print('\n\n')
+    io.write("  j  ( -- )    Jumper, latest. ")
+       print("  k  ( -- n )  Kick, drop lastest.")
+  print('\n')
 end
 
 function map()
@@ -60,26 +65,31 @@ function map()
 end
 
 function randTrunk(s)
+  math.random(s[#s])
   local ts = crm.trunks()
-  ts = ts[ math.random( 1, #ts ) ]
-  table.insert( s, ts )
+  s[#s] = ts[ math.random( 1, #ts ) ]
 end
 
 function find( s )
-  s[#s] = crm.find(s[#s]) 
+  s[#s] = crm.addr(s[#s]) 
 end
 
 function addTrunk( s )
-  crm.addT( drops(s) )
+  table.insert( s, crm.addT( drops(s) ) )
 end
 
 function addBranch( s )
   swap( s )
-  crm.addL( crm.addr( drops(s) ), drops(s) )
+  table.insert( s, crm.addL( drops(s), drops(s) ) )
 end
 
-function addLeaf( s, ss )
-  crm.addL( drops(s), drops(ss) )
+function addLeaf( s, ss, o )
+  o = o or ""
+  if not string.find(ss[#ss], ":") then
+    print("\tNo attribute specified, leaf not added.")
+  else
+    s[#s] = crm.parentOf( crm.addL( s[#s], drops(ss) ) )
+  end
 end
 
 function attrOf( s )
@@ -90,6 +100,9 @@ function attrOf( s )
   end
 end
 
+function jmpr( s )
+  s[#s+1] = crm.last()
+end
 
 function dup ( s ) s[#s+1] = s[#s] end
 function drop( s ) s[#s] = nil end
@@ -128,15 +141,6 @@ function printAry( s )
   end
 end
 
-function printWords(a) 
-  local s = "\t\t"
-  for i, v in pairs(a) do
-    s = s..i..'\t'
-    if #s > 16 then print(s) s = "\t\t" end
-  end
-  print(s)
-end
-
 function exitSave()
   crm.save("data.db")
   return false
@@ -153,8 +157,8 @@ local words =
   ['s'] = function() one( stack, crm.summarize ) end, 
   ['d'] = function() one( stack, crm.diagram   ) end, 
   ['f'] = function() find( stack ) end, 
-  ['j'] = function() one( stack, crm.judge     ) end, 
-  ['k'] = function() one( stack, crm.know      ) end, 
+  ['j'] = function() jmpr( stack ) end, 
+  ['k'] = function() crm.drop()    end, 
   ['l'] = function() one( stack, crm.lineage   ) end, 
   [';'] = function() one( stack, crm.print     ) end, 
 
@@ -188,15 +192,15 @@ local words =
 while state do
   local line = io.read('*l')
   line = processStrings(sstack, line)
-  for ix, word in pairs(splitInput(line)) do
-
-    if word == 'words' then printWords(words)
-    elseif words[word] ~= nil then
-      words[word](stack)
-    elseif tonumber(word) ~= nil then
-      table.insert(stack, tonumber(word))
-    elseif #word >= 3 then
-      table.insert(stack, word)
+  for ix, typed in pairs(splitInput(line)) do
+    if words[typed] ~= nil then
+      words[typed]()
+    elseif ext[typed] ~= nil then
+      ext[typed]()
+    elseif tonumber(typed) ~= nil then
+      table.insert(stack, tonumber(typed))
+    elseif #typed>= 3 then
+      table.insert(stack, typed)
     else
       print("\t...not found.")
     end

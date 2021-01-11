@@ -207,6 +207,10 @@ function crm.childrenOf( node )
   return ch
 end
 
+function crm.parentOf( n )
+  return crm.extract(n).parent
+end
+
 ---- CLI F(x)'s (Mostly) ---- Offload to other library?
 
 function crm.printEntries( ary )
@@ -231,14 +235,31 @@ function crm.adjacent( node )
   end
 end
 
+local function printPhone( s )
+  local o = ""
+  if #s > 10 then
+    o = string.sub(s,1,1).."-"
+    s = string.sub(s,2,#s) 
+  end
+  o = o..(string.sub(s,1,3).."-"..string.sub(s,4,6).."-"..string.sub(s,7,10))
+  return o
+end
+
 function crm.summarize( node )
+  print('\n')
   node = crm.extract( node )
   local attr = crm.getAttributes( node.addr )
-  print('\n\t\t', attr['company'])
-  print("Address:      ", 
-    attr['address'], '    ', attr['city']..', '..attr['state']) 
-  print("Phone Number: ", attr['phone'], "\t\tEmail:        ", attr['email'])
-  print("Website:      ", attr['website'])
+  if attr['company'] then
+    print('\n\t\t', attr['company'])
+    print("Address:      ", 
+      attr['address'], '    ', attr['city']..', '..attr['state']) 
+    print("Phone #: ", printPhone(attr['phone']), 
+      "\t\tEmail: ", attr['email'])
+    print("Website:      ", attr['website'])
+  elseif attr['first'] then
+    print(attr['first'], attr['last'])
+    print(attr['phone'], attr['email'])
+  end
   local ch = crm.childrenOf( node.addr )
   print( "\n  ---- Recent Additions: ----" )
   if #ch < 7 then
@@ -254,38 +275,21 @@ end
 
 function crm.diagram( node )
   local n = crm.extract(node)
-  print( n.addr..' ● '..n.label )
+  print( n.addr..' ● '..( n.label or n.data ) )
   local chilluns = crm.childrenOf( node )
   for i=1,#chilluns do
     local c = crm.extract(chilluns[i])
     local granchilluns = crm.childrenOf( c.addr )
     if #granchilluns == 0 then
-      print(c.addr..'   ‒❥ '..limit(c.data,64) )
+      print(c.addr,'   ‒❥ '..limit(c.data,60) )
     else
-      print(c.addr..'  ‒‒ '..limit(c.data,64) )
+      print(c.addr,'   -- '..limit(c.data,60) )
       for ix=1, #granchilluns do
         local gc = crm.extract( granchilluns[ix] )
-        print(gc.addr..'     ❥ '..limit(gc.data,64) )
+        print(gc.addr,'     ❥ '..limit(gc.data,60) )
       end
     end
   end
-end
-
-function crm.find( str )
-  return crm.addr( str )
-end
-
-function crm.judge( nada )
-  -- For now this is a complete placeholder. 
-  -- Maybe 'J' will become a different verb.
-  -- That said, when scheduling begins to enter the
-  -- Picture this could perform an important role.
-end
-
-function crm.know( nada)
-  -- Again, very unsure. But it's a useful key, so
-  -- If I can't find anything to put here, I'll have to
-  -- swap it for one of the add functions. 
 end
 
 function crm.lineage( n )
@@ -293,11 +297,10 @@ function crm.lineage( n )
   n = crm.extract(n)
   while not n.isTrunk do
     prefix = prefix.."  "
-    print(prefix..(n.data or n.label))
+    print("  "..n.addr, prefix..(n.data or n.label))
     n = crm.extract(n.parent)
   end
-  print(prefix.."  "..(n.data or n.label))
-  print(prefix.."    O")
+  print("  "..n.addr, prefix.." ⯄ "..(n.data or n.label))
 end
 
 function crm.print( n )
@@ -309,6 +312,19 @@ function crm.info( node )
   local str = node.label or node.data
   if #str > 64 then str = string.sub(str, 1, 61).."..." end
   print(node.addr.." : "..str.." : "..node.next)
+end
+
+function crm.last()
+  local l = {}
+  crm.forEachEntry(
+    function( e ) l = e.addr end
+  )
+  return l
+end
+
+function crm.drop()
+  local l = crm.last()
+  crm.db = string.sub( crm.db, 1, l + 1 )
 end
 
 return crm
