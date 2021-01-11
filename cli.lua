@@ -56,7 +56,7 @@ function help()
     io.write("  a  ( a -- )  Adjacent\t\t")
        print("  l  ( n -- )  Lineage\t\t")
     io.write("  j  ( -- )    Jumper, latest. ")
-       print("  k  ( -- n )  Kick, drop lastest.")
+       print("\n","  kick  ( -- n )  Kick, drop latest.")
   print('\n')
 end
 
@@ -92,12 +92,24 @@ function addLeaf( s, ss, o )
   end
 end
 
-function attrOf( s )
-  local a = drops(s)
-  local p = drops(s)
+function fetchAttr( s )
+  local a = drops(s) local p = drops(s)
   for k, v in pairs( crm.getAttributes(p) ) do
     if a==k then print( v ) end
   end
+  table.insert( s, p )
+end
+
+function storeAttr( s )
+  local a = drops(s) local p = drops(s)
+  io.write("  "..a.."> ") io.flush()
+  local v = io.read()
+  crm.addL( p, a..":"..v )
+  table.insert( s, p )
+end
+
+function addressAttr( s )
+  
 end
 
 function jmpr( s )
@@ -158,7 +170,7 @@ local words =
   ['d'] = function() one( stack, crm.diagram   ) end, 
   ['f'] = function() find( stack ) end, 
   ['j'] = function() jmpr( stack ) end, 
-  ['k'] = function() crm.drop()    end, 
+  ['k'] = function() print( sstack[#sstack] ) end, 
   ['l'] = function() one( stack, crm.lineage   ) end, 
   [';'] = function() one( stack, crm.print     ) end, 
 
@@ -171,7 +183,10 @@ local words =
   ['+b'] = function() addBranch ( stack ) end, 
   ['+l'] = function() addLeaf   ( stack, sstack ) end, 
 
-  ['@'] = function() attrOf( stack ) end,
+  ['@'] = function() fetchAttr( stack ) end,
+  ['!'] = function() storeAttr( stack ) end, 
+
+  ['address!'] = function() addressAttr( stack ) end, 
 
   ['+']    = function()  add(stack) end,
   ["drop"] = function() drop(stack) end, 
@@ -184,6 +199,7 @@ local words =
   [".s"]    = function() printAry(stack) end, 
   [".ss"]   = function() printAry(sstack) end, 
   ["clr"]   = function() stack = {} sstack = {} end,
+  ['kick'] = function() crm.drop()    end, 
   ['help']  = function() help() end, 
   ['x']     = function()  state = false end, 
 }

@@ -1,21 +1,17 @@
-misc = require("./lib/misc.lua")
+crm = require("./lib/crm.lua")
+csv = require("./lib/csv.lua")
 
 -- Main - Loop --
-local state = true
-while state do
-  io.write("\n>> ")
-  io.flush()
-  local line = io.read()
-  local c = string.sub(line, 1, 1)
-  if c == "x" then
-    state = false
-  elseif c == "a" then
-    print("A")
-  elseif c == "b" then
-    io.write("B")
-  elseif c == "c" then
-    io.write("C")
-  else
-    print("\t...not found.")
-  end
-end
+
+local joe = crm.addT("joe")
+  crm.addL( joe, "first:Joe" )
+  crm.addL( joe, "last:Mann" )
+  crm.addL( joe, "email:asdf@asdf.com" )
+  crm.addL( joe, "phone:1231231234" )
+
+crm.drop()
+crm.summarize( joe )
+crm.addL( joe, "note:He's a thief!" )
+crm.addL( joe, "note:He's a pirate!" )
+crm.summarize( joe )
+

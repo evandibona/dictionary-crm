@@ -324,7 +324,7 @@ end
 
 function crm.drop()
   local l = crm.last()
-  crm.db = string.sub( crm.db, 1, l + 1 )
+  crm.db = string.sub( crm.db, 1, l )
 end
 
 return crm
