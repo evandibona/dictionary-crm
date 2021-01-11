@@ -190,6 +190,9 @@ local words =
 
 -- Main - Loop --
 while state do
+  if stack[#stack-1] then io.write(' ■ ') else io.write(' □ ') end
+  io.write((stack[#stack] or 'nil')..' > ') 
+  io.flush()
   local line = io.read('*l')
   line = processStrings(sstack, line)
   for ix, typed in pairs(splitInput(line)) do
