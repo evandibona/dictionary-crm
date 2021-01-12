@@ -1,0 +1,10 @@
+If I rewrite CLI soon, here's what needs to change. 
+
+  A Register. 
+    - Certain words will deposit to and pull from this register. 
+    - Current Branch or Tree only
+    : find, parent, origin, 
+  Ary
+    - Current array for the most recent search results. 
+    - Along with the words required to pretty-print and handle arrays. 
+    : All of the major array functions

@@ -64,10 +64,16 @@ function map()
   print( "Trunks:  "..#crm.trunks() )
 end
 
-function randTrunk(s)
-  math.random(s[#s])
-  local ts = crm.trunks()
-  s[#s] = ts[ math.random( 1, #ts ) ]
+function randEntry(s)
+  math.randomseed(s[#s])
+  local entries = crm.entries()
+  s[#s] = entries[math.random(1,#entries)]
+end
+function randEntryPlus(s)
+  local h = s[#s]
+  randEntry(s)
+  table.insert(s, h+1)
+  swap(s)
 end
 
 function find( s )
@@ -131,10 +137,12 @@ function swap( s )
 end
 
 function add( s )
-  local a = s[#s]
-  local b = s[#s-1]
+  s[#s-1] = s[#s] + s[#s-1]
   drop(s)
-  s[#s] = a+b
+end
+
+function addadd( s )
+  s[#s] = s[#s] + s[#s-1]
 end
 
 function one( s, f )
@@ -176,7 +184,8 @@ local words =
 
   ['i'] = function() one( stack, crm.info      ) end, 
   ['m'] = function() map() end, 
-  ['r'] = function() randTrunk( stack ) end, 
+  ['r'] = function() randEntry( stack ) end, 
+  ['r+'] = function() randEntryPlus( stack ) end, 
   ['t'] = function() crm.printEntries( crm.trunks() ) end, 
 
   ['+t'] = function() addTrunk  ( stack ) end, 
@@ -189,6 +198,7 @@ local words =
   ['address!'] = function() addressAttr( stack ) end, 
 
   ['+']    = function()  add(stack) end,
+  ['++']   = function()  addadd(stack) end,
   ["drop"] = function() drop(stack) end, 
   ["dup"]  = function()  dup(stack) end, 
   ["swap"] = function() swap(stack) end, 

@@ -211,6 +211,14 @@ function crm.parentOf( n )
   return crm.extract(n).parent
 end
 
+function crm.originOf( n )
+  local e = extract(n)
+  while not e.isTrunk do
+    e = crm.extract(e.parent)
+  end
+  return e.addr
+end
+
 ---- CLI F(x)'s (Mostly) ---- Offload to other library?
 
 function crm.printEntries( ary )
