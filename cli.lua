@@ -2,11 +2,8 @@
 
 local csv = require('./lib/csv.lua')
 local crm = require('./lib/crm.lua')
-local ext = { } 
-if arg[1] then
-  local ext = require(arg[1])
-end
 
+local usefulSymbols = "︙🞂🞍🞜"
 
 function splitInput( str )
   local ary = {}
@@ -16,26 +13,13 @@ function splitInput( str )
   return ary
 end
 
-function processStrings( ss, ln )
-  local state = false
-  local ix = #ss + 1
-  local nl = ""
-  for i = 1, #ln do
-    local s = string.sub(ln, i, i)
-    if s == '"' then
-      state = not state
-      if state then 
-        ss[ix] = ""
-      else
-        ix = ix+1 
-      end
-    elseif state then
-      ss[ix] = ss[ix]..s
-    else
-      nl = nl..s
-    end
+function prompt(s, a, b)
+  io.write("#A:"..#a.." ")
+  for i=#s-4,#s,1 do
+    if s[i] then io.write('■ ') else io.write('□ ') end
   end
-  return nl
+  io.write("︙"..(b or 'nil')..' › ') 
+  io.flush()
 end
 
 function help()
@@ -58,10 +42,6 @@ function help()
     io.write("  j  ( -- )    Jumper, latest. ")
        print("\n","  kick  ( -- n )  Kick, drop latest.")
   print('\n')
-end
-
-function map()
-  print( "Trunks:  "..#crm.trunks() )
 end
 
 function randEntry(s)
@@ -118,10 +98,6 @@ function addressAttr( s )
   
 end
 
-function jmpr( s )
-  s[#s+1] = crm.last()
-end
-
 function dup ( s ) s[#s+1] = s[#s] end
 function drop( s ) s[#s] = nil end
 function drops(s ) 
@@ -169,28 +145,35 @@ end
 crm.open("data.db")
 local backup= crm.db
 local stack = {}
-local sstack= {}
+local A = {}
+local B = 0
 local state = true
 local words = 
 {
-  ['a'] = function() one( stack, crm.adjacent  ) end, 
-  ['s'] = function() one( stack, crm.summarize ) end, 
-  ['d'] = function() one( stack, crm.diagram   ) end, 
-  ['f'] = function() find( stack ) end, 
-  ['j'] = function() jmpr( stack ) end, 
-  ['k'] = function() print( sstack[#sstack] ) end, 
-  ['l'] = function() one( stack, crm.lineage   ) end, 
-  [';'] = function() one( stack, crm.print     ) end, 
-
-  ['i'] = function() one( stack, crm.info      ) end, 
-  ['m'] = function() map() end, 
-  ['r'] = function() randEntry( stack ) end, 
-  ['r+'] = function() randEntryPlus( stack ) end, 
-  ['t'] = function() crm.printEntries( crm.trunks() ) end, 
-
+-- Return Array
+  ['l'] = function() A = crm.lineage( stack )  end, 
+  --AllEntries
+  ['t'] = function() crm.trunks() end, 
+  --AllChildrenOf
+  --Search All Data / Labels
+  ['g'] = function() A = crm.graph(B)   end, 
+--Return Node( tree or branch )
+  ['f'] = function() B = find( stack ) end, 
   ['+t'] = function() addTrunk  ( stack ) end, 
   ['+b'] = function() addBranch ( stack ) end, 
   ['+l'] = function() addLeaf   ( stack, sstack ) end, 
+-- Input Array
+  --prettyPrint
+  --nth
+  --length
+-- Input Node
+  --summary, lineage, info, graph. Don't alter B. 
+  --next, increment B to next entry or next item in A.
+--Other
+  ['i'] = function() crm.info(stack) end, 
+  ['r'] = function() print("report, catered to strategy") end, 
+--Meta
+  ['kick'] = function() crm.drop()    end, 
 
   ['@'] = function() fetchAttr( stack ) end,
   ['!'] = function() storeAttr( stack ) end, 
@@ -203,36 +186,33 @@ local words =
   ["dup"]  = function()  dup(stack) end, 
   ["swap"] = function() swap(stack) end, 
 
-  ["sdrop"]= function() drop(sstack) end, 
-  ["sdup"] = function()  dup(sstack) end, 
+  ["A"]    = function() A = drops(stack) end, 
+  [".A"]   = function() prettyPrint(A) end, 
+  [".B"]   = function() crm.print(B) end, 
+  [".s"]   = function() printStack(stack) end, 
+  ["clr"]   = function() stack = {} end,
 
-  [".s"]    = function() printAry(stack) end, 
-  [".ss"]   = function() printAry(sstack) end, 
-  ["clr"]   = function() stack = {} sstack = {} end,
-  ['kick'] = function() crm.drop()    end, 
   ['help']  = function() help() end, 
-  ['x']     = function()  state = false end, 
+  ['undo']  = function() crm.db = backup crm.save("data.db") end,
+  ['x']     = function()  state = false end
 }
 
 -- Main - Loop --
+print("\n")
 while state do
-  if stack[#stack-1] then io.write(' ■ ') else io.write(' □ ') end
-  io.write((stack[#stack] or 'nil')..' > ') 
-  io.flush()
+  prompt(stack, A, B) 
   local line = io.read('*l')
-  line = processStrings(sstack, line)
   for ix, typed in pairs(splitInput(line)) do
     if words[typed] ~= nil then
       words[typed]()
-    elseif ext[typed] ~= nil then
-      ext[typed]()
     elseif tonumber(typed) ~= nil then
       table.insert(stack, tonumber(typed))
     elseif #typed>= 3 then
       table.insert(stack, typed)
     else
-      print("\t...not found.")
+      print("\t...word not found.")
     end
   end
   crm.save("data.db")
 end
+
