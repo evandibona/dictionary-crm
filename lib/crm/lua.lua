@@ -309,11 +309,10 @@ function crm.graph( n )
     end
     io.write('.') io.flush()
   end
-  return children
+  return { n, children }
 end
 
 function crm.lineage( n )
--- Needs to return an array with the first element representing the origin. 
   local lng = { }
   n = crm.extract(n)
   while not n.isTrunk do

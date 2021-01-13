@@ -22,24 +22,34 @@ function prompt(s, a, b)
   io.flush()
 end
 
+function max( str )
+  if #str > 72 then
+    str = string.sub(str,1,72)
+  end return str end
+
 function flatPrint( a )
   for i=1,#a do
-    print(a[i])
+    print(max("  "..a[i]))
   end
 end
 
 function prettyPrint( a )
-  local prefix = ""
+  local prefix = " "
   local function prettyInner( a )
     if tonumber(a) then
       local e = crm.extract(tonumber(a)) 
-      print(prefix..(e.label or e.data))
+      print(e.addr..max( prefix..(e.label or e.data) ))
     elseif type(a)=='string' then
-      print(prefix..a)
+      print(max( prefix..a ))
     elseif type(a)=='table' then
-      prefix = prefix.."  "
+      if #a > 2 then
+        prefix = prefix.."  "
+      end
       for i=1,#a do
         prettyInner(a[i])
+      end
+      if #a > 2 then
+        prefix = string.sub(prefix, 1, #prefix-2)
       end
     else
       print("\tInvalid Input.")
@@ -90,8 +100,9 @@ function storeAttr( s )
   table.insert( s, p )
 end
 
-function dup ( s ) s[#s+1] = s[#s] end
-function drop( s ) s[#s] = nil end
+function push( s, n ) s[#s+1] = n     end
+function dup ( s )    s[#s+1] = s[#s] end
+function drop( s )    s[#s] = nil     end
 function drops(s ) 
   local e = s[#s] 
   s[#s] = nil
@@ -128,14 +139,18 @@ local words =
 -- Return Array
   ['a'] = function() A = crm.entries() end, 
   ['t'] = function() A = crm.trunks() end, 
-  ['l'] = function() A = crm.lineage( B )  end, 
   ['c'] = function() A = crm.childrenOf(B) end, 
   ['g'] = function() A = crm.graph(B) print() end, 
+  ['l'] = function() A = crm.lineage( B )  end, 
 --Return Node( tree or branch )
   ['f'] = function() B = find( stack ) end, 
   ['+t'] = function() addTrunk  ( stack ) end, 
   ['+b'] = function() addBranch ( stack ) end, 
-  ['+l'] = function() addLeaf   ( stack, sstack ) end, 
+  ['+l'] = function() addLeaf   ( B, sstack ) end, 
+
+  ['@'] = function() fetchAttr( stack ) end,
+  ['!'] = function() storeAttr( stack ) end, 
+
 -- Input Array
   ['nth'] = function() nth(stack, A) end, 
   [".A"]   = function() prettyPrint(A) end, 
@@ -149,9 +164,6 @@ local words =
   ['r'] = function() print("report, catered to strategy") end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
-
-  ['@'] = function() fetchAttr( stack ) end,
-  ['!'] = function() storeAttr( stack ) end, 
 
   ['address!'] = function() addressAttr( stack ) end, 
 
