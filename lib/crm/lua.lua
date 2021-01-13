@@ -48,13 +48,12 @@ function crm.extract( a )
   end
 end
 
-function crm.getAttributes( n )
+function crm.attributesOf( n )
   local attr = { }
   crm.forEachChildOf( n, 
     function( c )
       if string.find(c.data, ":") then
-        attr[string.match(c.data, "(.+):")] = 
-             string.match(c.data, ":(.+)")
+        table.insert( attr, 1, c.addr )
       end
     end
   )
@@ -205,6 +204,18 @@ function crm.childrenOf( node )
     end
   )
   return ch
+end
+
+function crm.branchesOf( node )
+  local  br = {}
+  local  ch = crm.childrenOf( node )
+  for i=1,#ch do
+    local c = crm.extract(ch[i])
+    if not string.find(c.data,":") then
+      table.insert(br, c.addr)
+    end
+  end
+  return br
 end
 
 function crm.parentOf( n )

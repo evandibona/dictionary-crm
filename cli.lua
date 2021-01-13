@@ -66,38 +66,34 @@ function find( s )
   return crm.addr(drops(s)) 
 end
 
-function addTrunk( s )
-  table.insert( s, crm.addT( drops(s) ) )
+function split( str )
+  return { string.match(str, "(.+):"), 
+           string.match(str, ":(.+)") }
 end
 
-function addBranch( s )
-  swap( s )
-  table.insert( s, crm.addL( drops(s), drops(s) ) )
-end
-
-function addLeaf( s, ss, o )
-  o = o or ""
-  if not string.find(ss[#ss], ":") then
-    print("\tNo attribute specified, leaf not added.")
-  else
-    s[#s] = crm.parentOf( crm.addL( s[#s], drops(ss) ) )
+function fetchAttr( a, p )
+  local atr = crm.attributesOf(p)
+  local mts = { }
+  for i=1,#atr do
+    local e = crm.extract(atr[i]).data
+    if split(e)[1] == a then
+      table.insert(mts, atr[i])
+    end
   end
+  return mts[1]
 end
 
-function fetchAttr( s )
-  local a = drops(s) local p = drops(s)
-  for k, v in pairs( crm.getAttributes(p) ) do
-    if a==k then print( v ) end
-  end
-  table.insert( s, p )
-end
-
-function storeAttr( s )
-  local a = drops(s) local p = drops(s)
+function storeAttr( a, p )
   io.write("  "..a.."> ") io.flush()
-  local v = io.read()
-  crm.addL( p, a..":"..v )
-  table.insert( s, p )
+  return crm.addL( p, a..":"..io.read() )
+end
+
+function storeAttrAry( ary, a )
+  io.write("{"..a.."}".." > ") io.flush()
+  local d = io.read()
+  for i=1,#ary do
+    crm.addL( ary[i], a..":"..d )
+  end
 end
 
 function push( s, n ) s[#s+1] = n     end
@@ -142,24 +138,22 @@ local words =
   ['c'] = function() A = crm.childrenOf(B) end, 
   ['g'] = function() A = crm.graph(B) print() end, 
   ['l'] = function() A = crm.lineage( B )  end, 
+  ['b'] = function() A = crm.branchesOf(B) end, 
 --Return Node( tree or branch )
-  ['f'] = function() B = find( stack ) end, 
-  ['+t'] = function() addTrunk  ( stack ) end, 
-  ['+b'] = function() addBranch ( stack ) end, 
-  ['+l'] = function() addLeaf   ( B, sstack ) end, 
-
-  ['@'] = function() fetchAttr( stack ) end,
-  ['!'] = function() storeAttr( stack ) end, 
-
+  ['f']  = function() B = find( stack ) end, 
+  ['+t'] = function() B = crm.addT(    drops(stack) ) end, 
+  ['+b'] = function()     crm.addL( B, drops(stack) ) end, 
+  ['+b>']= function() B = crm.addL( B, drops(stack) ) end, 
 -- Input Array
   ['nth'] = function() nth(stack, A) end, 
   [".A"]   = function() prettyPrint(A) end, 
-  --length
+  ['A!'] = function() storeAttrAry( A, drops(stack) ) end, 
 -- Input Node
+  ['@'] = function() push( stack, fetchAttr( drops(stack), B )) end,
+  ['!'] = function() push( stack, storeAttr( drops(stack), B )) end, 
   [".B"]   = function() prettyPrint(B) end, 
-  --summary, lineage, info, graph. Don't alter B. 
-  --next, increment B to next entry or next item in A.
 --Other
+  ['.']= function() prettyPrint(drops(stack)) end, 
   ['i'] = function() crm.info(stack) end, 
   ['r'] = function() print("report, catered to strategy") end, 
 --Meta
@@ -173,11 +167,10 @@ local words =
   ["dup"]  = function()  dup(stack) end, 
   ["swap"] = function() swap(stack) end, 
 
-  ["A"]    = function() A = drops(stack) end, 
-  ["B"]    = function() B = drops(stack) end, 
-  ["B+"]   = function() B = crm.extract(B).next end, 
-  [".s"]   = function() flatPrint(stack) end, 
-  ["clr"]  = function() stack = {} end,
+  ['B']    = function() B = drops(stack) end, 
+  ['B+']   = function() B = crm.extract(B).next end, 
+  ['.s']   = function() flatPrint(stack) end, 
+  ['clr']  = function() stack = {} end,
 
   ['help'] = function() print("not yet") end, 
   ['save'] = function() crm.save('data.db') end,
