@@ -300,15 +300,27 @@ function crm.diagram( node )
   end
 end
 
+function crm.graph( n )
+  local children = crm.childrenOf( n )
+  for i = 1,#children do
+    local c = crm.childrenOf( children[i] )
+    if #c > 0 then
+      children[i] = crm.graph( children[i] )
+    end
+    io.write('.') io.flush()
+  end
+  return children
+end
+
 function crm.lineage( n )
-  local prefix = ""
+-- Needs to return an array with the first element representing the origin. 
+  local lng = { }
   n = crm.extract(n)
   while not n.isTrunk do
-    prefix = prefix.."  "
-    print("  "..n.addr, prefix..(n.data or n.label))
-    n = crm.extract(n.parent)
+    n = crm.extract( n.parent )
+    table.insert( lng, 1, n.addr )
   end
-  print("  "..n.addr, prefix.." ⯄ "..(n.data or n.label))
+  return lng
 end
 
 function crm.print( n )

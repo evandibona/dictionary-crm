@@ -14,50 +14,46 @@ function splitInput( str )
 end
 
 function prompt(s, a, b)
-  io.write("#A:"..#a.." ")
-  for i=#s-4,#s,1 do
+  io.write(#a.." 《")
+  for i=#s-2,#s,1 do
     if s[i] then io.write('■ ') else io.write('□ ') end
   end
-  io.write("︙"..(b or 'nil')..' › ') 
+  io.write("》"..(b or 'nil')..' › ') 
   io.flush()
 end
 
-function help()
-  print()
-    io.write("   +t  ( s -- ) +Trunk   ")
-    io.write("+t  ( n s -- ) +Branch   ")
-    io.write("+t  ( n s -- ) +Leaf   ")
-
-  print('\n')
-    io.write("  s  ( n -- )  Summarize\t")
-       print("  d  ( n -- )  Diagram\t\t")
-    io.write("  i  ( n -- )  Info\t\t")
-       print("  f  ( n -- )  Find\t\t")
-    io.write("  ;  ( n -- )  Print\t\t")
-       print("  @  ( n s -- )  Attribute of Tree\t\t")
-    io.write("  t  ( -- )    Print Trunk\t")
-       print("  r  ( -- )    Random Trunk\t\t")
-    io.write("  a  ( a -- )  Adjacent\t\t")
-       print("  l  ( n -- )  Lineage\t\t")
-    io.write("  j  ( -- )    Jumper, latest. ")
-       print("\n","  kick  ( -- n )  Kick, drop latest.")
-  print('\n')
+function flatPrint( a )
+  for i=1,#a do
+    print(a[i])
+  end
 end
 
-function randEntry(s)
-  math.randomseed(s[#s])
-  local entries = crm.entries()
-  s[#s] = entries[math.random(1,#entries)]
+function prettyPrint( a )
+  local prefix = ""
+  local function prettyInner( a )
+    if tonumber(a) then
+      local e = crm.extract(tonumber(a)) 
+      print(prefix..(e.label or e.data))
+    elseif type(a)=='string' then
+      print(prefix..a)
+    elseif type(a)=='table' then
+      prefix = prefix.."  "
+      for i=1,#a do
+        prettyInner(a[i])
+      end
+    else
+      print("\tInvalid Input.")
+    end
+  end
+  prettyInner(a)
 end
-function randEntryPlus(s)
-  local h = s[#s]
-  randEntry(s)
-  table.insert(s, h+1)
-  swap(s)
+
+function nth( s, a )
+  s[#s] = a[s[#s]]
 end
 
 function find( s )
-  s[#s] = crm.addr(s[#s]) 
+  return crm.addr(drops(s)) 
 end
 
 function addTrunk( s )
@@ -94,10 +90,6 @@ function storeAttr( s )
   table.insert( s, p )
 end
 
-function addressAttr( s )
-  
-end
-
 function dup ( s ) s[#s+1] = s[#s] end
 function drop( s ) s[#s] = nil end
 function drops(s ) 
@@ -121,29 +113,12 @@ function addadd( s )
   s[#s] = s[#s] + s[#s-1]
 end
 
-function one( s, f )
-  if #s > 0 then 
-    f( drops(s) ) 
-  else
-    print("  stack is empty, preventing crash.")
-  end
-end
-
-function printAry( s )
-  if s ~= nil then
-    for i, e in pairs(s) do
-      print("\t"..e)
-    end
-  end
-end
-
 function exitSave()
   crm.save("data.db")
   return false
 end
 
 crm.open("data.db")
-local backup= crm.db
 local stack = {}
 local A = {}
 local B = 0
@@ -151,22 +126,22 @@ local state = true
 local words = 
 {
 -- Return Array
-  ['l'] = function() A = crm.lineage( stack )  end, 
-  --AllEntries
-  ['t'] = function() crm.trunks() end, 
-  --AllChildrenOf
-  --Search All Data / Labels
-  ['g'] = function() A = crm.graph(B)   end, 
+  ['a'] = function() A = crm.entries() end, 
+  ['t'] = function() A = crm.trunks() end, 
+  ['l'] = function() A = crm.lineage( B )  end, 
+  ['c'] = function() A = crm.childrenOf(B) end, 
+  ['g'] = function() A = crm.graph(B) print() end, 
 --Return Node( tree or branch )
   ['f'] = function() B = find( stack ) end, 
   ['+t'] = function() addTrunk  ( stack ) end, 
   ['+b'] = function() addBranch ( stack ) end, 
   ['+l'] = function() addLeaf   ( stack, sstack ) end, 
 -- Input Array
-  --prettyPrint
-  --nth
+  ['nth'] = function() nth(stack, A) end, 
+  [".A"]   = function() prettyPrint(A) end, 
   --length
 -- Input Node
+  [".B"]   = function() prettyPrint(B) end, 
   --summary, lineage, info, graph. Don't alter B. 
   --next, increment B to next entry or next item in A.
 --Other
@@ -187,14 +162,15 @@ local words =
   ["swap"] = function() swap(stack) end, 
 
   ["A"]    = function() A = drops(stack) end, 
-  [".A"]   = function() prettyPrint(A) end, 
-  [".B"]   = function() crm.print(B) end, 
-  [".s"]   = function() printStack(stack) end, 
-  ["clr"]   = function() stack = {} end,
+  ["B"]    = function() B = drops(stack) end, 
+  ["B+"]   = function() B = crm.extract(B).next end, 
+  [".s"]   = function() flatPrint(stack) end, 
+  ["clr"]  = function() stack = {} end,
 
-  ['help']  = function() help() end, 
-  ['undo']  = function() crm.db = backup crm.save("data.db") end,
-  ['x']     = function()  state = false end
+  ['help'] = function() print("not yet") end, 
+  ['save'] = function() crm.save('data.db') end,
+  ['x']    = function()  state = false end,
+  ['exit'] = function()  state = false end
 }
 
 -- Main - Loop --
@@ -207,12 +183,9 @@ while state do
       words[typed]()
     elseif tonumber(typed) ~= nil then
       table.insert(stack, tonumber(typed))
-    elseif #typed>= 3 then
-      table.insert(stack, typed)
     else
-      print("\t...word not found.")
+      table.insert(stack, typed)
     end
   end
-  crm.save("data.db")
 end
 
