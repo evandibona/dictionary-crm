@@ -71,7 +71,7 @@ end
 function fetchAttr( a, p )
   local atr = crm.attributesOf(p)
   local mts = { }
-  for i=1,#atr do
+  for i=#atr,1,-1 do
     local e = crm.extract(atr[i]).data
     if crm.split(e)[1] == a then
       table.insert(mts, atr[i])

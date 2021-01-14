@@ -244,12 +244,12 @@ function crm.printEntries( ary )
   end
 end
 
-function split( str )
+function crm.split( str )
   return { string.match(str, "(.+):"), 
            string.match(str, ":(.+)") }
 end
 
-function splitCsv( str )
+local function splitCsv( str )
   local split = { }
   local tmp = ""
   for i=1,#str do
@@ -282,7 +282,7 @@ function crm.tagsOf( n )
   local tags = ""
   for i=1,#ary do
     local e = crm.extract(ary[i]) 
-    local s = split(e.data)
+    local s = crm.split(e.data)
     if s[1] == "tags" then
       tags = s[2] 
     end
@@ -295,30 +295,33 @@ end
 
 function isDup( t, n )
   local o = false
+  n = n[1]
   for i=1,#t do
-    if t[i] == n then o = true end
+    if t[i][1] == n then o = true end
   end
   return o
 end
 
 function crm.taggedWith( tag )
-  local ary = crm.entries()
-  local out = { }
-  print("START! ")
+  local sec = { }
   crm.forRevEntry(
     function( e )
       if string.find(e.data or "","tags:") then
-        local tags = splitCsv(split(e.data)[2]) 
-        for ix=1,#tags do
-          if (tags[ix] == tag) and (not isDup(out, e.parent)) then
-            print(e.addr, e.data)
-            table.insert(out, e.parent)
-          end
+        local ln = { e.parent, crm.split(e.data)[2] }
+        if not isDup( sec, ln ) then
+          table.insert(sec, ln)
         end
       end
     end
   )
-  return out
+  ary = { }
+  for i=1,#sec do
+    local e = sec[i]
+    if string.find(e[2], tag) then
+      table.insert(ary, e[1])
+    end
+  end
+  return ary
 end
 
 local function printPhone( s )
