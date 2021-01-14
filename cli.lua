@@ -28,9 +28,15 @@ function max( str )
   end return str end
 
 function flatPrint( a )
+  print()
   for i=1,#a do
-    print(max("  "..a[i]))
+    if type(a[i])=='table' then
+      print("  --table--")
+    else
+      print(max("  "..a[i]))
+    end
   end
+  print()
 end
 
 function prettyPrint( a )
@@ -59,16 +65,7 @@ function prettyPrint( a )
 end
 
 function nth( s, a )
-  s[#s] = a[s[#s]]
-end
-
-function find( s )
-  return crm.addr(drops(s)) 
-end
-
-function split( str )
-  return { string.match(str, "(.+):"), 
-           string.match(str, ":(.+)") }
+  return a[drops(s)+1]
 end
 
 function fetchAttr( a, p )
@@ -76,7 +73,7 @@ function fetchAttr( a, p )
   local mts = { }
   for i=1,#atr do
     local e = crm.extract(atr[i]).data
-    if split(e)[1] == a then
+    if crm.split(e)[1] == a then
       table.insert(mts, atr[i])
     end
   end
@@ -96,7 +93,7 @@ function storeAttrAry( ary, a )
   end
 end
 
-function push( s, n ) s[#s+1] = n     end
+function push( s, n ) s[#s+1] = n return s    end
 function dup ( s )    s[#s+1] = s[#s] end
 function drop( s )    s[#s] = nil     end
 function drops(s ) 
@@ -125,6 +122,18 @@ function exitSave()
   return false
 end
 
+function help()
+  flatPrint({ 
+    " Return Ary  : Return Node : Take Ary    : Take Node   : Other       ",
+    " all         |  f find     | .A Print    | .B          | .  p top    ",
+    " trunks      | +t addTrunk | nth Idx     |  ! strAtr   | .s p stack  ",
+    " childrenOf  | +b addBranch| A! !Atr2Ech |  @ fchAtr   |  clr        ",
+    ' graph       | +b> " &rtrn |             |             |             ',
+    " lineage     |             |             |             |             ",
+    " branchesOf  |             |             |             |             " 
+  })
+end
+
 crm.open("data.db")
 local stack = {}
 local A = {}
@@ -135,17 +144,22 @@ local words =
 -- Return Array
   ['a'] = function() A = crm.entries() end, 
   ['t'] = function() A = crm.trunks() end, 
-  ['c'] = function() A = crm.childrenOf(B) end, 
+  ['b'] = function() A = crm.branches(B) end, 
   ['g'] = function() A = crm.graph(B) print() end, 
+  ['c'] = function() A = crm.childrenOf(B) end, 
   ['l'] = function() A = crm.lineage( B )  end, 
-  ['b'] = function() A = crm.branchesOf(B) end, 
---Return Node( tree or branch )
-  ['f']  = function() B = find( stack ) end, 
+  ['b>']= function() A = crm.branchesOf(B) end, 
+  ['t!']= function() push( stack, crm.tag(B) ) end, 
+  ['t@']= function() push( stack, crm.tagsOf(B) ) end, 
+  ['t:']= function() A = crm.taggedWith(drops(stack)) end, 
+  ['{f}']=function() A = crm.findAll(drops(stack)) end, 
+-- Return Node( tree or branch )
+  ['f']  = function() B = crm.addr(drops(stack)) end, 
   ['+t'] = function() B = crm.addT(    drops(stack) ) end, 
   ['+b'] = function()     crm.addL( B, drops(stack) ) end, 
   ['+b>']= function() B = crm.addL( B, drops(stack) ) end, 
 -- Input Array
-  ['nth'] = function() nth(stack, A) end, 
+  ['nth'] = function() B = nth(stack, A) end, 
   [".A"]   = function() prettyPrint(A) end, 
   ['A!'] = function() storeAttrAry( A, drops(stack) ) end, 
 -- Input Node
@@ -158,21 +172,18 @@ local words =
   ['r'] = function() print("report, catered to strategy") end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
-
-  ['address!'] = function() addressAttr( stack ) end, 
-
+--Data Ops
   ['+']    = function()  add(stack) end,
   ['++']   = function()  addadd(stack) end,
   ["drop"] = function() drop(stack) end, 
   ["dup"]  = function()  dup(stack) end, 
   ["swap"] = function() swap(stack) end, 
-
   ['B']    = function() B = drops(stack) end, 
-  ['B+']   = function() B = crm.extract(B).next end, 
-  ['.s']   = function() flatPrint(stack) end, 
-  ['clr']  = function() stack = {} end,
 
-  ['help'] = function() print("not yet") end, 
+  ['.s']   = function() flatPrint(stack) end, 
+  ['clr']  = function() stack = {} A = {} B = 0 end,
+
+  ['help'] = function() help() end, 
   ['save'] = function() crm.save('data.db') end,
   ['x']    = function()  state = false end,
   ['exit'] = function()  state = false end

@@ -48,18 +48,6 @@ function crm.extract( a )
   end
 end
 
-function crm.attributesOf( n )
-  local attr = { }
-  crm.forEachChildOf( n, 
-    function( c )
-      if string.find(c.data, ":") then
-        table.insert( attr, 1, c.addr )
-      end
-    end
-  )
-  return attr
-end
-
 function crm.forEachEntry( f )
   local e = {}
   e.next = 0
@@ -166,6 +154,18 @@ function crm.trunks()
   return ts
 end
 
+function crm.branches()
+  local bs = {}
+  crm.forEachEntry(
+    function( e )
+      if not e.isTrunk and not string.find(e.data or e.label, ":") then
+        table.insert(bs, e.addr)
+      end
+    end
+  )
+  return bs
+end
+
 function crm.indexTrunks()
   local ts = {}
   crm.forEachEntry(
@@ -244,14 +244,81 @@ function crm.printEntries( ary )
   end
 end
 
+function split( str )
+  return { string.match(str, "(.+):"), 
+           string.match(str, ":(.+)") }
+end
 
-function crm.adjacent( node )
-  node = crm.extract(node)
-  if node.isTrunk then
-    print("adjacent() is only valid for branches and leaves.")
-  else
-    return crm.childrenOf( node.parent )
+function splitCsv( str )
+  local split = { }
+  local tmp = ""
+  for i=1,#str do
+    local c = string.sub(str,i,i)
+    if c == ',' then
+      table.insert(split,tmp)
+      tmp = ""
+    else
+      tmp = tmp..c
+    end
   end
+  table.insert(split,tmp)
+  return split
+end
+
+function crm.attributesOf( n )
+  local attr = { }
+  crm.forEachChildOf( n, 
+    function( c )
+      if string.match(c.data, ":") then
+        table.insert( attr, c.addr )
+      end
+    end
+  )
+  return attr
+end
+
+function crm.tagsOf( n )
+  local ary = crm.attributesOf( n )
+  local tags = ""
+  for i=1,#ary do
+    local e = crm.extract(ary[i]) 
+    local s = split(e.data)
+    if s[1] == "tags" then
+      tags = s[2] 
+    end
+  end
+  return splitCsv(tags)
+end
+
+function crm.tag( n )
+end
+
+function isDup( t, n )
+  local o = false
+  for i=1,#t do
+    if t[i] == n then o = true end
+  end
+  return o
+end
+
+function crm.taggedWith( tag )
+  local ary = crm.entries()
+  local out = { }
+  print("START! ")
+  crm.forRevEntry(
+    function( e )
+      if string.find(e.data or "","tags:") then
+        local tags = splitCsv(split(e.data)[2]) 
+        for ix=1,#tags do
+          if (tags[ix] == tag) and (not isDup(out, e.parent)) then
+            print(e.addr, e.data)
+            table.insert(out, e.parent)
+          end
+        end
+      end
+    end
+  )
+  return out
 end
 
 local function printPhone( s )
