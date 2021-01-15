@@ -166,6 +166,18 @@ function crm.branches()
   return bs
 end
 
+function crm.branchesOf( node )
+  local  br = {}
+  local  ch = crm.childrenOf( node )
+  for i=1,#ch do
+    local c = crm.extract(ch[i])
+    if not string.find(c.data,":") then
+      table.insert(br, c.addr)
+    end
+  end
+  return br
+end
+
 function crm.indexTrunks()
   local ts = {}
   crm.forEachEntry(

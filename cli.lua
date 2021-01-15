@@ -44,7 +44,8 @@ function prettyPrint( a )
   local function prettyInner( a )
     if tonumber(a) then
       local e = crm.extract(tonumber(a)) 
-      print(e.addr..max( prefix..(e.label or e.data) ))
+      local adr = string.format( '%8d' ,tostring(e.addr) )
+      print(adr..max( prefix..(e.label or e.data) ))
     elseif type(a)=='string' then
       print(max( prefix..a ))
     elseif type(a)=='table' then
@@ -142,16 +143,16 @@ local state = true
 local words = 
 {
 -- Return Array
-  ['a'] = function() A = crm.entries() end, 
-  ['t'] = function() A = crm.trunks() end, 
-  ['b'] = function() A = crm.branches(B) end, 
-  ['g'] = function() A = crm.graph(B) print() end, 
-  ['c'] = function() A = crm.childrenOf(B) end, 
-  ['l'] = function() A = crm.lineage( B )  end, 
-  ['b>']= function() A = crm.branchesOf(B) end, 
-  ['t!']= function() push( stack, crm.tag(B) ) end, 
-  ['t@']= function() push( stack, crm.tagsOf(B) ) end, 
-  ['t:']= function() A = crm.taggedWith(drops(stack)) end, 
+  ['a']  = function() A = crm.entries()  end, 
+  ['t']  = function() A = crm.trunks()   end, 
+  ['b']  = function() A = crm.branches() end, 
+  ['c:'] = function() A = crm.childrenOf(B) end, 
+  ['p:'] = function() B = crm.parentOf(drops(stack) or B) end, 
+  ['b:'] = function() A = crm.branchesOf(B) end, 
+  ['t:'] = function() A = crm.taggedWith(drops(stack)) end, 
+  ['g:']  = function() A = crm.graph(B) print() end, 
+  ['t!'] = function() push( stack, crm.tag(B) ) end, 
+  ['t@'] = function() push( stack, crm.tagsOf(B) ) end, 
   ['{f}']=function() A = crm.findAll(drops(stack)) end, 
 -- Return Node( tree or branch )
   ['f']  = function() B = crm.addr(drops(stack)) end, 
@@ -166,6 +167,10 @@ local words =
   ['@'] = function() push( stack, fetchAttr( drops(stack), B )) end,
   ['!'] = function() push( stack, storeAttr( drops(stack), B )) end, 
   [".B"]   = function() prettyPrint(B) end, 
+-- Ease
+  ['l']  = function() A = crm.lineage( B )  end, 
+  ["company-summary"] = function() end, 
+  ["person-summary"] = function() end,  --phone,email,address,name
 --Other
   ['.']= function() prettyPrint(drops(stack)) end, 
   ['i'] = function() crm.info(stack) end, 
@@ -190,6 +195,7 @@ local words =
 }
 
 -- Main - Loop --
+
 print("\n")
 while state do
   prompt(stack, A, B) 
@@ -205,3 +211,7 @@ while state do
   end
 end
 
+--In future restructuring: 
+--Add support so command line arguments can pass cmds to prgm
+--Basic Macros would also be handy
+-- aka interpret( string )
