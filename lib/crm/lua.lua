@@ -127,10 +127,20 @@ function crm.addr( s )
       end
     end
   )
-  --print("No entry matches the string: "..s)
 end
 
 ---- Array Returns ----
+
+function crm.findAll( s )
+  local all = {}
+  crm.forEachEntry(
+    function( e )
+      if looseMatch(s, (e.label or e.data)) then
+        table.insert(all, e.addr)
+      end
+    end)
+  return all
+end
 
 function crm.entries()
   local es = {}

@@ -31,12 +31,11 @@ function flatPrint( a )
   print()
   for i=1,#a do
     if type(a[i])=='table' then
-      print("  --table--")
+      print("     --table--")
     else
-      print(max("  "..a[i]))
+      print("  "..max((#a-i+1).."  "..a[i]))
     end
   end
-  print()
 end
 
 function prettyPrint( a )
@@ -135,6 +134,23 @@ function help()
   })
 end
 
+function interpret(raw, words, s, a, b) --move above words
+  for ix=1,#raw do
+    local chunk = raw[ix] 
+    if words[chunk] ~= nil then
+      words[chunk]()
+    elseif tonumber(chunk) ~= nil then
+      table.insert(s, tonumber(chunk))
+    --[[
+    elseif metaWords[chunk] ~= nil then
+      metaWords[chunk](raw)
+    ]]
+    else
+      table.insert( s, chunk )
+    end
+  end
+end
+
 crm.open("data.db")
 local stack = {}
 local A = {}
@@ -150,10 +166,10 @@ local words =
   ['p:'] = function() B = crm.parentOf(drops(stack) or B) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['t:'] = function() A = crm.taggedWith(drops(stack)) end, 
-  ['g:']  = function() A = crm.graph(B) print() end, 
+  ['g:'] = function() A = crm.graph(B) print() end, 
+  ['f:'] = function() A = crm.findAll(drops(stack)) end, 
   ['t!'] = function() push( stack, crm.tag(B) ) end, 
   ['t@'] = function() push( stack, crm.tagsOf(B) ) end, 
-  ['{f}']=function() A = crm.findAll(drops(stack)) end, 
 -- Return Node( tree or branch )
   ['f']  = function() B = crm.addr(drops(stack)) end, 
   ['+t'] = function() B = crm.addT(    drops(stack) ) end, 
@@ -175,6 +191,7 @@ local words =
   ['.']= function() prettyPrint(drops(stack)) end, 
   ['i'] = function() crm.info(stack) end, 
   ['r'] = function() print("report, catered to strategy") end, 
+  ['B']    = function() B = drops(stack) end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
 --Data Ops
@@ -183,7 +200,6 @@ local words =
   ["drop"] = function() drop(stack) end, 
   ["dup"]  = function()  dup(stack) end, 
   ["swap"] = function() swap(stack) end, 
-  ['B']    = function() B = drops(stack) end, 
 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
@@ -196,20 +212,16 @@ local words =
 
 -- Main - Loop --
 
-print("\n")
-while state do
-  prompt(stack, A, B) 
-  local line = io.read('*l')
-  for ix, typed in pairs(splitInput(line)) do
-    if words[typed] ~= nil then
-      words[typed]()
-    elseif tonumber(typed) ~= nil then
-      table.insert(stack, tonumber(typed))
-    else
-      table.insert(stack, typed)
-    end
+print()
+if arg and (#arg > 0) then
+  interpret(arg, words, stack, A, B)
+else
+  while state do
+    prompt(stack, A, B) 
+    interpret(splitInput(io.read()), words, stack, A, B)
   end
 end
+print()
 
 --In future restructuring: 
 --Add support so command line arguments can pass cmds to prgm
