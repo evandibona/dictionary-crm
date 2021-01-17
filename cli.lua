@@ -51,6 +51,12 @@ function prompt(s, a, b)
   io.flush()
 end
 
+function getInput(s)
+  io.write("  "..s.." > ")
+  io.flush()
+  return io.read()
+end
+
 function max( str )
   if #str > 72 then
     str = string.sub(str,1,72)
@@ -93,10 +99,6 @@ function prettyPrint( a )
   prettyInner(a)
 end
 
-function nth( s, a )
-  return a[drops(s)+1]
-end
-
 function fetchAttr( a, p )
   local atr = crm.attributesOf(p)
   local mts = { }
@@ -109,17 +111,35 @@ function fetchAttr( a, p )
   return mts[1]
 end
 
-function storeAttr( a, p )
-  io.write("  "..a.."> ") io.flush()
-  return crm.addL( p, a..":"..io.read() )
+function storeAttr( p, b, a )
+  print('>', p, a, b)
+  return crm.addL( p, a..':'..b )
 end
 
-function storeAttrAry( ary, a )
-  io.write("{"..a.."}".." > ") io.flush()
-  local d = io.read()
-  for i=1,#ary do
-    crm.addL( ary[i], a..":"..d )
+function storeAttrAry( ary, d, atr )
+    print(":::", atr)
+    for i=1,#ary do
+      if type(ary[i]) == 'number'then
+        crm.addL( ary[i], atr..":"..d )
+      end
+    end
+end
+
+function makeAry(s) 
+  local a = {}
+  local i = #s
+  while i > 0 do
+    if s[i] == '{' then
+      table.remove(s, i)
+      i = 0
+    else
+      table.insert(a, s[i])
+      table.remove(s, i)
+      i = i - 1
+    end
   end
+  table.insert(s, a)
+  return s
 end
 
 function push( s, n ) s[#s+1] = n return s    end
@@ -131,15 +151,31 @@ function drops(s )
   if not e then print("Stack Empty, prepare for crash!") end
   return e
 end
+
+function add( s )
+  s[#s-1] = s[#s] + s[#s-1]
+  drop(s)
+end
+
 function swap( s ) 
   local e = s[#s]
     s[#s] = s[#s-1]
   s[#s-1] = e
 end
 
-function add( s )
-  s[#s-1] = s[#s] + s[#s-1]
-  drop(s)
+function slice( ary, n )
+  print("not implemented")
+  -- Get inner table 'n' times, until level == n. 
+  -- Then remove all entries that are tables. 
+  return ary
+end
+
+function outByType( data )
+  local t = type(data)
+  if     t=='string'  then push( stack, data )
+  elseif t=='number'  then B = data
+  elseif t=='table'   then A = data
+  end
 end
 
 function addadd( s )
@@ -182,13 +218,14 @@ function interpret(raw, words, s, a, b) --move above words
 end
 
 crm.open("data.db")
-local stack = {}
-local A = {}
-local B = 0
-local state = true
-local words = 
+stack = {}
+A = {}
+B = 0
+state = true
+words = 
 {
 -- Return Array
+  ['}']  = function() stack = makeAry(stack) A = drops(stack) end, 
   ['a']  = function() A = crm.entries()  end, 
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
@@ -206,12 +243,13 @@ local words =
   ['+b'] = function()     crm.addL( B, drops(stack) ) end, 
   ['+b>']= function() B = crm.addL( B, drops(stack) ) end, 
 -- Input Array
-  ['nth'] = function() B = nth(stack, A) end, 
-  [".A"]   = function() prettyPrint(A) end, 
-  ['A!'] = function() storeAttrAry( A, drops(stack) ) end, 
+  ['nth'] = function() outByType( A[drops(stack)+1] ) end,
+  [".a"]  = function() flatPrint(A) end, 
+  [".A"]  = function() prettyPrint(A) end, 
+  ['A!']  = function() storeAttrAry(A, drops(stack), drops(stack) ) end, 
 -- Input Node
   ['@'] = function() push( stack, fetchAttr( drops(stack), B )) end,
-  ['!'] = function() push( stack, storeAttr( drops(stack), B )) end, 
+  ['!'] = function() push( stack, storeAttr(B, drops(stack), drops(stack)) ) end,
   [".B"]   = function() prettyPrint(B) end, 
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
@@ -230,6 +268,8 @@ local words =
   ["drop"] = function() drop(stack) end, 
   ["dup"]  = function()  dup(stack) end, 
   ["swap"] = function() swap(stack) end, 
+  ["input"]= function() push(stack, getInput(drops(stack))) end,
+  ['slice']= function() A = slice(A, drops(stack)) end, 
 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
