@@ -112,12 +112,10 @@ function fetchAttr( a, p )
 end
 
 function storeAttr( p, b, a )
-  print('>', p, a, b)
   return crm.addL( p, a..':'..b )
 end
 
 function storeAttrAry( ary, d, atr )
-    print(":::", atr)
     for i=1,#ary do
       if type(ary[i]) == 'number'then
         crm.addL( ary[i], atr..":"..d )
@@ -142,26 +140,13 @@ function makeAry(s)
   return s
 end
 
-function push( s, n ) s[#s+1] = n return s    end
-function dup ( s )    s[#s+1] = s[#s] end
-function drop( s )    s[#s] = nil     end
-function drops(s ) 
-  local e = s[#s] 
-  s[#s] = nil
-  if not e then print("Stack Empty, prepare for crash!") end
-  return e
-end
-
-function add( s )
-  s[#s-1] = s[#s] + s[#s-1]
-  drop(s)
-end
-
-function swap( s ) 
-  local e = s[#s]
-    s[#s] = s[#s-1]
-  s[#s-1] = e
-end
+function push( n )  stack[#stack+1] = n     end
+function dup ()     push( stack[#stack] ) end
+function drop()     stack[#stack] = nil     end
+function add()      push( drops() + drops() ) end
+function swap()     local x = drops() local y = drops() push(x) push(y) end
+function drops( s ) local e = stack[#stack] drop() return e end
+function adds( )    stack[#stack] = stack[#stack] + stack[#stack-1] end
 
 function slice( ary, n )
   print("not implemented")
@@ -172,15 +157,12 @@ end
 
 function outByType( data )
   local t = type(data)
-  if     t=='string'  then push( stack, data )
+  if     t=='string'  then push( data )
   elseif t=='number'  then B = data
   elseif t=='table'   then A = data
   end
 end
 
-function addadd( s )
-  s[#s] = s[#s] + s[#s-1]
-end
 
 function exitSave()
   crm.save("data.db")
@@ -224,52 +206,53 @@ B = 0
 state = true
 words = 
 {
--- Return Array
-  ['}']  = function() stack = makeAry(stack) A = drops(stack) end, 
+-- Return Array, Collect
+  ['}']  = function() stack = makeAry(stack) A = drops() end, 
   ['a']  = function() A = crm.entries()  end, 
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
-  ['p:'] = function() B = crm.parentOf(drops(stack) or B) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
-  ['t:'] = function() A = crm.taggedWith(drops(stack)) end, 
+  ['t:'] = function() A = crm.taggedWith(drops()) end, 
+  ['f:'] = function() A = crm.findAll(drops()) end, 
   ['g:'] = function() A = crm.graph(B) print() end, 
-  ['f:'] = function() A = crm.findAll(drops(stack)) end, 
-  ['t!'] = function() push( stack, crm.tag(B) ) end, 
-  ['t@'] = function() push( stack, crm.tagsOf(B) ) end, 
+-- Return Array, Refine  [[ For later implementation. ]]
+  [':f'] = function() end, 
 -- Return Node( tree or branch )
-  ['f']  = function() B = crm.addr(drops(stack)) end, 
-  ['+t'] = function() B = crm.addT(    drops(stack) ) end, 
-  ['+b'] = function()     crm.addL( B, drops(stack) ) end, 
-  ['+b>']= function() B = crm.addL( B, drops(stack) ) end, 
+  ['f']  = function() B = crm.addr(drops()) end, 
+  ['+t'] = function() B = crm.addT(    drops() ) end, 
+  ['+b'] = function()     crm.addL( B, drops() ) end, 
+  ['+b>']= function() B = crm.addL( B, drops() ) end, 
+  ['p'] = function() B = crm.parentOf(drops() or B) end, 
 -- Input Array
-  ['nth'] = function() outByType( A[drops(stack)+1] ) end,
+  ['nth'] = function() outByType( A[drops()+1] ) end,
   [".a"]  = function() flatPrint(A) end, 
   [".A"]  = function() prettyPrint(A) end, 
-  ['A!']  = function() storeAttrAry(A, drops(stack), drops(stack) ) end, 
+  [':!']  = function() storeAttrAry(A, drops(), drops() ) end, 
+  [':@']  = function() print("Is this feature necessary?") end, 
 -- Input Node
-  ['@'] = function() push( stack, fetchAttr( drops(stack), B )) end,
-  ['!'] = function() push( stack, storeAttr(B, drops(stack), drops(stack)) ) end,
+  ['@'] = function() push( fetchAttr( drops(), B )) end,
+  ['!'] = function() push( storeAttr(B, drops(), drops()) ) end,
   [".B"]   = function() prettyPrint(B) end, 
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
   ["company-summary"] = function() end, 
   ["person-summary"] = function() end,  --phone,email,address,name
 --Other
-  ['.']= function() prettyPrint(drops(stack)) end, 
-  ['i'] = function() crm.info(stack) end, 
+  ['.']= function() prettyPrint(drops()) end, 
+  ['i'] = function() crm.info(drops()) end, 
   ['r'] = function() print("report, catered to strategy") end, 
-  ['B']    = function() B = drops(stack) end, 
+  ['B']    = function() B = drops() end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
 --Data Ops
-  ['+']    = function()  add(stack) end,
-  ['++']   = function()  addadd(stack) end,
-  ["drop"] = function() drop(stack) end, 
-  ["dup"]  = function()  dup(stack) end, 
-  ["swap"] = function() swap(stack) end, 
-  ["input"]= function() push(stack, getInput(drops(stack))) end,
-  ['slice']= function() A = slice(A, drops(stack)) end, 
+  ['+']    = function()  add() end,
+  ['++']   = function()  adds() end,
+  ["drop"] = function() drop() end, 
+  ["dup"]  = function()  dup() end, 
+  ["swap"] = function() swap() end, 
+  ["input"]= function() push(getInput(drops())) end,
+  ['slice']= function() A = slice(A, drops()) end, 
 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,

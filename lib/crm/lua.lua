@@ -312,9 +312,6 @@ function crm.tagsOf( n )
   return splitCsv(tags)
 end
 
-function crm.tag( n )
-end
-
 function isDup( t, n )
   local o = false
   n = n[1]
