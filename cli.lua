@@ -5,12 +5,41 @@ local crm = require('./lib/crm.lua')
 
 local usefulSymbols = "︙🞂🞍🞜"
 
+function join( a, d )
+  local s = ""
+  for i=1,(#a-1) do
+    s = s..a[i]..d
+  end return s..a[#a]
+end
+
 function splitInput( str )
-  local ary = {}
-  for e in string.gmatch(str, "([^%s]+)") do
-    table.insert(ary, e)
+  local wrds = {}
+  local sS = false
+  local curw = ""
+  for i=1,#str do
+    local c = string.sub(str, i, i)
+    if c==" " and (not sS)  then
+      if #curw > 0 then
+        table.insert(wrds, curw)
+        curw = "" 
+      end
+    elseif c=='"' then
+      sS = not sS
+      if sS == false then
+      elseif sS == true then
+        if #curw > 0 then
+          table.insert(wrds, curw) 
+          curw = "" 
+        end
+      end
+    else
+      curw = curw..c
+    end
   end
-  return ary
+  if #curw > 0 then
+    table.insert(wrds, curw)
+  end
+  return wrds
 end
 
 function prompt(s, a, b)
@@ -135,6 +164,7 @@ function help()
 end
 
 function interpret(raw, words, s, a, b) --move above words
+  raw = splitInput( raw )
   for ix=1,#raw do
     local chunk = raw[ix] 
     if words[chunk] ~= nil then
@@ -214,11 +244,11 @@ local words =
 
 print()
 if arg and (#arg > 0) then
-  interpret(arg, words, stack, A, B)
+  interpret(join(arg, " "), words, stack, A, B)
 else
   while state do
     prompt(stack, A, B) 
-    interpret(splitInput(io.read()), words, stack, A, B)
+    interpret(io.read(), words, stack, A, B)
   end
 end
 print()
