@@ -92,37 +92,25 @@ function crm.forEachChildOf( node, f )
   end
 end
 
-local function addT( db, ref, t )
-  adr = #db
-  t = t or os.time()
-  local nxt = 2^31 + #db
-        nxt = nxt + 8 + #ref
-  db = db..intToStr( nxt )
-  db = db..intToStr(  t  )
-  db = db..ref
-  return db, adr
-end
-
-local function addL( db, par, dat, t )
-  adr = #db
-  t = t or os.time()
-  local nxt = #db + 12 + #dat
-  db = db..intToStr( nxt )
-  db = db..intToStr(  t  )
-  db = db..intToStr( par )
-  db = db..dat
-  return db, adr
-end
-
 function crm.addT( ref, t )
-  local adr = 0
-  crm.db, adr = addT( crm.db, ref, t )
+  adr = #crm.db
+  t = t or os.time()
+  local nxt = 2^31 + #crm.db
+        nxt = nxt + 8 + #ref
+  crm.db = crm.db..intToStr( nxt )
+  crm.db = crm.db..intToStr(  t  )
+  crm.db = crm.db..ref
   return adr
 end
 
 function crm.addL( par, dat, t )
-  local adr = 0
-  crm.db, adr = addL( crm.db, par, dat, t )
+  adr = #crm.db
+  t = t or os.time()
+  local nxt = #crm.db + 12 + #dat
+  crm.db = crm.db..intToStr( nxt )
+  crm.db = crm.db..intToStr(  t  )
+  crm.db = crm.db..intToStr( par )
+  crm.db = crm.db..dat
   return adr
 end
 
