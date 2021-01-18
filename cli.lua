@@ -236,6 +236,7 @@ words =
   [".B"]   = function() prettyPrint(B) end, 
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
+  ['g'] = function() prettyPrint( crm.graph(B) ) end, 
   ["company-summary"] = function() end, 
   ["person-summary"] = function() end,  --phone,email,address,name
 --Other

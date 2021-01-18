@@ -79,8 +79,8 @@ function csv.allByKey( f )
   end )
 end
 
-function csv.lineByKey( l, f )
-  l = csv.lines[l]
+function csv.lineByKey( n, f )
+  local l = csv.lines[n]
   for i=1, #l do
     if l[i] then
       f( csv.keys[i], l[i] )

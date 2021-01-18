@@ -241,7 +241,7 @@ function crm.branchesOf( node )
 end
 
 function crm.parentOf( n )
-  return crm.extract(n).parent
+  return crm.extract(n).parent or n
 end
 
 function crm.originOf( n )
@@ -409,6 +409,7 @@ function crm.graph( n )
     end
     io.write('.') io.flush()
   end
+  print()
   return { n, children }
 end
 
