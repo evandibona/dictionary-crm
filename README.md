@@ -30,9 +30,9 @@ At its core this is a linked list, stored in a binary file. Reminiscent of Forth
 
 In the short term this is for people like myself. For whom a simple interface is preferred, text-based is desirable, and the ability to script additions is desirable. 
 
-Lofty Ambitions
----------------
+## Lofty Ambitions
 * Binary files packaged into the database file: jpg/png, mp3, txt
 * Multiple tracks for different customer types. 
   * So that the big picture plan can be coded.
 * Calendar system
+

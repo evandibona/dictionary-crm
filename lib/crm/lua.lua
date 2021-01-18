@@ -92,25 +92,37 @@ function crm.forEachChildOf( node, f )
   end
 end
 
-function crm.addT( ref, t )
-  adr = #crm.db
+local function addT( db, ref, t )
+  adr = #db
   t = t or os.time()
-  local nxt = 2^31 + #crm.db
+  local nxt = 2^31 + #db
         nxt = nxt + 8 + #ref
-  crm.db = crm.db..intToStr( nxt )
-  crm.db = crm.db..intToStr(  t  )
-  crm.db = crm.db..ref
+  db = db..intToStr( nxt )
+  db = db..intToStr(  t  )
+  db = db..ref
+  return db, adr
+end
+
+local function addL( db, par, dat, t )
+  adr = #db
+  t = t or os.time()
+  local nxt = #db + 12 + #dat
+  db = db..intToStr( nxt )
+  db = db..intToStr(  t  )
+  db = db..intToStr( par )
+  db = db..dat
+  return db, adr
+end
+
+function crm.addT( ref, t )
+  local adr = 0
+  crm.db, adr = addT( crm.db, ref, t )
   return adr
 end
 
 function crm.addL( par, dat, t )
-  adr = #crm.db
-  t = t or os.time()
-  local nxt = #crm.db + 12 + #dat
-  crm.db = crm.db..intToStr( nxt )
-  crm.db = crm.db..intToStr(  t  )
-  crm.db = crm.db..intToStr( par )
-  crm.db = crm.db..dat
+  local adr = 0
+  crm.db, adr = addL( crm.db, par, dat, t )
   return adr
 end
 
@@ -446,5 +458,27 @@ function crm.drop()
   local l = crm.last()
   crm.db = string.sub( crm.db, 1, l )
 end
+
+---- REBUILD DATABASE ----
+-- Purpose, to exclude entries from the database. 
+-- By extension move branches from one trunk to another. 
+
+-- The real challenge is calculating the addresses. 
+-- One answer: Slurp everything in array, store that. 
+
+function crm.rebuildFrom( keepers )
+  local new = {}
+  for i, v in pairs(keepers) do
+    table.insert(new, crm.extract(v))
+  end
+  crm.db = ""
+  for i, e in pairs(new) do
+    if e.isTrunk then
+      crm.addT( e.label, e.date )
+    else
+      crm.addL( e.parent, e.data, e.date )
+    end
+  end
+end 
 
 return crm

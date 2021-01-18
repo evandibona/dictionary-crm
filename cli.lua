@@ -215,7 +215,7 @@ words =
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['f:'] = function() A = crm.findAll(drops()) end, 
-  ['g:'] = function() A = crm.graph(B) print() end, 
+  ['g:'] = function() A = crm.graphFlat(B) end, 
 -- Return Array, Refine  [[ For later implementation. ]]
   [':f'] = function() end, 
 -- Return Node( tree or branch )
@@ -225,7 +225,7 @@ words =
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
   ['p'] = function() B = crm.parentOf(drops() or B) end, 
 -- Input Array
-  ['nth'] = function() outByType( A[drops()+1] ) end,
+  ['nth'] = function() outByType( A[drops()] ) end,
   [".a"]  = function() flatPrint(A) end, 
   [".A"]  = function() prettyPrint(A) end, 
   [':!']  = function() storeAttrAry(A, drops(), drops() ) end, 
@@ -241,8 +241,6 @@ words =
   ["person-summary"] = function() end,  --phone,email,address,name
 --Other
   ['.']= function() prettyPrint(drops()) end, 
-  ['i'] = function() crm.info(drops()) end, 
-  ['r'] = function() print("report, catered to strategy") end, 
   ['B']    = function() B = drops() end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
@@ -257,6 +255,8 @@ words =
 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
+
+  ['rebuild'] = function() crm.rebuildFrom(A) end, 
 
   ['help'] = function() help() end, 
   ['save'] = function() crm.save('data.db') end,
