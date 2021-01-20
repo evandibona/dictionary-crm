@@ -256,7 +256,7 @@ words =
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
 
-  ['rebuild'] = function() crm.rebuildFrom(A) end, 
+  ['rebuild'] = function() crm.rebuildFrom(A) words['clr']() end, 
 
   ['help'] = function() help() end, 
   ['save'] = function() crm.save('data.db') end,

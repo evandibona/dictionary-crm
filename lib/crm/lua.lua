@@ -476,22 +476,16 @@ end
 function crm.rebuildFrom( keepers )
   print()
   local new = { }
-  local old = crm.entries() 
+  table.sort(keepers, function(i,j) return i > j end)
 
   while #keepers > 0 do
     local e = crm.extract(table.remove(keepers))
-    local c = crm.childrenOf(e.addr) 
     if e.isTrunk then
       table.insert(new, { e.label, e.date })
     else
       local p = crm.extract(e.parent)
       p = p.label or p.data
       table.insert(new, { p, e.data, e.date })
-    end
-    if #c > 0 then
-      for i=#c,1,-1 do
-        table.insert(keepers, c[i])
-      end
     end
   end
   --- Don't do any of the checking for children or parents above. 
