@@ -451,20 +451,60 @@ end
 -- Purpose, to exclude entries from the database. 
 -- By extension move branches from one trunk to another. 
 
--- The real challenge is calculating the addresses. 
--- One answer: Slurp everything in array, store that. 
+-- One solution: Parent labels must be tracked. 
+-- That may be the key to avoiding fancy graphs. 
+
+local function isInAry( ary, e )
+  local r = false
+  for i=1,#ary do
+    if ary[i] == e then
+      r = true
+    end
+  end
+  return r
+end
+
+local function addNoDup( ary, e )
+  if not isInAry( ary, e ) then
+    table.insert( ary, e )
+    return #ary
+  else
+    return false
+  end
+end
 
 function crm.rebuildFrom( keepers )
-  local new = {}
-  for i, v in pairs(keepers) do
-    table.insert(new, crm.extract(v))
-  end
-  crm.db = ""
-  for i, e in pairs(new) do
+  print()
+  local new = { }
+  local old = crm.entries() 
+
+  while #keepers > 0 do
+    local e = crm.extract(table.remove(keepers))
+    local c = crm.childrenOf(e.addr) 
     if e.isTrunk then
-      crm.addT( e.label, e.date )
+      table.insert(new, { e.label, e.date })
     else
-      crm.addL( e.parent, e.data, e.date )
+      local p = crm.extract(e.parent)
+      p = p.label or p.data
+      table.insert(new, { p, e.data, e.date })
+    end
+    if #c > 0 then
+      for i=#c,1,-1 do
+        table.insert(keepers, c[i])
+      end
+    end
+  end
+  --- Don't do any of the checking for children or parents above. 
+  --- If a parent doesn't exist below, just leave it off. 
+
+  crm.db = ""
+  for i,keeper in pairs(new) do
+    if #keeper == 2 then
+      crm.addT(keeper[1], keeper[2])
+    else
+      if crm.addr(keeper[1]) then
+        crm.addL(crm.addr(keeper[1]), keeper[2], keeper[3])
+      end
     end
   end
 end 

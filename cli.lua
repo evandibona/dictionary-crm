@@ -233,14 +233,12 @@ words =
 -- Input Node
   ['@'] = function() push( fetchAttr( drops(), B )) end,
   ['!'] = function() push( storeAttr(B, drops(), drops()) ) end,
-  [".B"]   = function() prettyPrint(B) end, 
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
   ['g'] = function() prettyPrint( crm.graph(B) ) end, 
   ["company-summary"] = function() end, 
   ["person-summary"] = function() end,  --phone,email,address,name
 --Other
-  ['.']= function() prettyPrint(drops()) end, 
   ['B']    = function() B = drops() end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
@@ -253,6 +251,8 @@ words =
   ["input"]= function() push(getInput(drops())) end,
   ['slice']= function() A = slice(A, drops()) end, 
 
+  ['.']    = function() prettyPrint(drops()) end, 
+  [".B"]   = function() prettyPrint(B) end, 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
 
@@ -276,8 +276,3 @@ else
   end
 end
 print()
-
---In future restructuring: 
---Add support so command line arguments can pass cmds to prgm
---Basic Macros would also be handy
--- aka interpret( string )
