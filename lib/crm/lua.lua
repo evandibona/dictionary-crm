@@ -18,6 +18,25 @@ function crm.save( n )
   f:close()
 end
 
+local function isInAry( ary, e )
+  local r = false
+  for i=1,#ary do
+    if ary[i] == e then
+      r = true
+    end
+  end
+  return r
+end
+
+local function addNoDup( ary, e )
+  if not isInAry( ary, e ) then
+    table.insert( ary, e )
+    return #ary
+  else
+    return false
+  end
+end
+
 local function limit( s, n )
   if #s > n then s = string.sub(s, 1, n) end 
   return s
@@ -140,6 +159,26 @@ function crm.findAll( s )
       end
     end)
   return all
+end
+
+function crm.findIn( atr, s, ary )
+  -- This whole word and system needs to be rethought. 
+  -- It's not particularly elegant, simple, or useful. 
+  local r = {}
+  for i=1,#ary do
+    local a = crm.attributesOf( ary[i] )
+    if #a > 0 then
+      for j=1,#a do
+        local e = crm.extract(a[j])
+        if looseMatch(atr, e.data) then
+          if string.find(crm.split(e.data)[2], s) then
+            addNoDup(r, e.parent )
+          end
+        end
+      end
+    end
+  end
+  return r
 end
 
 function crm.entries()
@@ -453,25 +492,6 @@ end
 
 -- One solution: Parent labels must be tracked. 
 -- That may be the key to avoiding fancy graphs. 
-
-local function isInAry( ary, e )
-  local r = false
-  for i=1,#ary do
-    if ary[i] == e then
-      r = true
-    end
-  end
-  return r
-end
-
-local function addNoDup( ary, e )
-  if not isInAry( ary, e ) then
-    table.insert( ary, e )
-    return #ary
-  else
-    return false
-  end
-end
 
 function crm.rebuildFrom( keepers )
   print()

@@ -62,6 +62,16 @@ function max( str )
     str = string.sub(str,1,72)
   end return str end
 
+function subset( a, b, ary )
+  local nary = {}
+  if ( a < b ) and ( b <= #ary ) then
+    for i=a,b do
+      table.insert(nary, ary[i]) 
+    end
+  end
+  return nary
+end
+
 function flatPrint( a )
   print()
   for i=1,#a do
@@ -99,7 +109,22 @@ function prettyPrint( a )
   prettyInner(a)
 end
 
-function fetchAttr( a, p )
+function summary( e ) -- Create phone prettifier in misc, move string stuff too
+  print('\t\t', string.upper(pullAttr(e, 'company')), '\n' )
+  print('\tphone', pullAttr(e,'phone'),pullAttr(e,'city'),pullAttr(e,'address'))
+  print('\n', pullAttr(e, 'description'))
+  print("c:"..#crm.branchesOf(e))
+end
+
+function pullAttr( n, a ) --<-- Also relocate
+  a = fetchAttr(a, n)
+  if a then
+    a = crm.split(crm.extract(a).data)[2]
+  end
+  return a or "unavailable"
+end
+
+function fetchAttr( a, p ) --<-- Relocate this to lib/crm 
   local atr = crm.attributesOf(p)
   local mts = { }
   for i=#atr,1,-1 do
@@ -115,7 +140,7 @@ function storeAttr( p, b, a )
   return crm.addL( p, a..':'..b )
 end
 
-function storeAttrAry( ary, d, atr )
+function storeAttrAry( ary, atr, d )
     for i=1,#ary do
       if type(ary[i]) == 'number'then
         crm.addL( ary[i], atr..":"..d )
@@ -211,35 +236,40 @@ words =
   ['a']  = function() A = crm.entries()  end, 
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
-  ['c:'] = function() A = crm.childrenOf(B) end, 
-  ['b:'] = function() A = crm.branchesOf(B) end, 
-  ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['f:'] = function() A = crm.findAll(drops()) end, 
-  ['g:'] = function() A = crm.graphFlat(B) end, 
--- Return Array, Refine  [[ For later implementation. ]]
-  [':f'] = function() end, 
+  ['t:'] = function() A = crm.taggedWith(drops()) end, 
+  ['b:'] = function() A = crm.branchesOf(B) end, 
+  ['c:'] = function() A = crm.childrenOf(B) end, 
+-- Return Refine Array Set [[ For later implementation. ]]
+  [':f'] = function() swap() A = crm.findIn(drops(), drops(), A)  end, 
+  [':t'] = function() end, 
+  [':a'] = function() end, 
+  ['sub']= function() swap() A = subset( drops(), drops(), A ) end, 
 -- Return Node( tree or branch )
   ['f']  = function() B = crm.addr(drops()) end, 
   ['+t'] = function() B = crm.addT(    drops() ) end, 
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
-  ['p'] = function() B = crm.parentOf(drops() or B) end, 
+  ['p']  = function() B = crm.parentOf(drops() or B) end, 
 -- Input Array
   ['nth'] = function() outByType( A[drops()] ) end,
+  ['nth.'] = function()     push( A[drops()] ) end,
   [".a"]  = function() flatPrint(A) end, 
   [".A"]  = function() prettyPrint(A) end, 
-  [':!']  = function() storeAttrAry(A, drops(), drops() ) end, 
+  [':!']  = function() swap() storeAttrAry(A, drops(), drops() ) end, 
   [':@']  = function() print("Is this feature necessary?") end, 
 -- Input Node
   ['@'] = function() push( fetchAttr( drops(), B )) end,
   ['!'] = function() push( storeAttr(B, drops(), drops()) ) end,
+  ['q'] = function() prettyPrint(crm.childrenOf(B)) end, 
+  ['w'] = function() summary(B) end, 
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
   ['g'] = function() prettyPrint( crm.graph(B) ) end, 
-  ["company-summary"] = function() end, 
   ["person-summary"] = function() end,  --phone,email,address,name
 --Other
   ['B']    = function() B = drops() end, 
+  ["'"]    = function() push( tostring(drops()) ) end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
 --Data Ops
@@ -276,3 +306,14 @@ else
   end
 end
 print()
+
+-- User Friendliness --
+-- An empty enter could generate a 2 line summary of everything.
+--   tags used
+-- Reduce trim,addNoDup, and others to misc library. 
+-- flatten function
+-- Difference of sets, aka all trunks that are not tagged by __
+  -- Implement as each one that returns arrays, has a positive and neg option.
+--
+
+-- 1 80 subset
