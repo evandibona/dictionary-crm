@@ -86,8 +86,9 @@ end
 function prettyPrint( a )
   local prefix = " "
   local function prettyInner( a )
-    if tonumber(a) then
-      local e = crm.extract(tonumber(a)) 
+    local num = math.tointeger(tonumber(a))
+    if num then
+      local e = crm.extract(num) 
       local adr = string.format( '%8d' ,tostring(e.addr) )
       print(adr..max( prefix..(e.label or e.data) ))
     elseif type(a)=='string' then
@@ -103,7 +104,7 @@ function prettyPrint( a )
         prefix = string.sub(prefix, 1, #prefix-2)
       end
     else
-      print("\tInvalid Input.")
+      push( num or a )
     end
   end
   prettyInner(a)
@@ -316,4 +317,3 @@ print()
   -- Implement as each one that returns arrays, has a positive and neg option.
 --
 
--- 1 80 subset
