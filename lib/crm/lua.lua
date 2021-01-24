@@ -18,29 +18,6 @@ function crm.save( n )
   f:close()
 end
 
-local function isInAry( ary, e )
-  local r = false
-  for i=1,#ary do
-    if ary[i] == e then
-      r = true
-    end
-  end
-  return r
-end
-
-local function addNoDup( ary, e )
-  if not isInAry( ary, e ) then
-    table.insert( ary, e )
-    return #ary
-  else
-    return false
-  end
-end
-
-local function limit( s, n )
-  if #s > n then s = string.sub(s, 1, n) end 
-  return s
-end
 local function intToStr( n ) return   string.pack(">I4", n) end
 local function strToInt( s ) return string.unpack(">I4", s) end
 
@@ -172,7 +149,7 @@ function crm.findIn( atr, s, ary )
         local e = crm.extract(a[j])
         if looseMatch(atr, e.data) then
           if string.find(crm.split(e.data)[2], s) then
-            addNoDup(r, e.parent )
+            misc.addNoDup(r, e.parent )
           end
         end
       end
@@ -310,22 +287,6 @@ function crm.split( str )
            string.match(str, ":(.+)") }
 end
 
-local function splitCsv( str )
-  local split = { }
-  local tmp = ""
-  for i=1,#str do
-    local c = string.sub(str,i,i)
-    if c == ',' then
-      table.insert(split,tmp)
-      tmp = ""
-    else
-      tmp = tmp..c
-    end
-  end
-  table.insert(split,tmp)
-  return split
-end
-
 function crm.attributesOf( n )
   local attr = { }
   crm.forEachChildOf( n, 
@@ -382,63 +343,6 @@ function crm.taggedWith( tag )
   return ary
 end
 
-local function printPhone( s )
-  local o = ""
-  if #s > 10 then
-    o = string.sub(s,1,1).."-"
-    s = string.sub(s,2,#s) 
-  end
-  o = o..(string.sub(s,1,3).."-"..string.sub(s,4,6).."-"..string.sub(s,7,10))
-  return o
-end
-
-function crm.summarize( node )
-  print('\n')
-  node = crm.extract( node )
-  local attr = crm.getAttributes( node.addr )
-  if attr['company'] then
-    print('\n\t\t', attr['company'])
-    print("Address:      ", 
-      attr['address'], '    ', attr['city']..', '..attr['state']) 
-    print("Phone #: ", printPhone(attr['phone']), 
-      "\t\tEmail: ", attr['email'])
-    print("Website:      ", attr['website'])
-  elseif attr['first'] then
-    print(attr['first'], attr['last'])
-    print(attr['phone'], attr['email'])
-  end
-  local ch = crm.childrenOf( node.addr )
-  print( "\n  ---- Recent Additions: ----" )
-  if #ch < 7 then
-    crm.printEntries( ch )
-  else
-    for i = #ch, #ch-6, -1 do
-      local e = crm.extract(ch[i])
-      print( e.addr.." : ", os.date( "%H:%M  %a %b %d, %Y", e.date ), 
-        limit(e.data,33) )
-    end
-  end
-end
-
-function crm.diagram( node )
-  local n = crm.extract(node)
-  print( n.addr..' ● '..( n.label or n.data ) )
-  local chilluns = crm.childrenOf( node )
-  for i=1,#chilluns do
-    local c = crm.extract(chilluns[i])
-    local granchilluns = crm.childrenOf( c.addr )
-    if #granchilluns == 0 then
-      print(c.addr,'   ‒❥ '..limit(c.data,60) )
-    else
-      print(c.addr,'   -- '..limit(c.data,60) )
-      for ix=1, #granchilluns do
-        local gc = crm.extract( granchilluns[ix] )
-        print(gc.addr,'     ❥ '..limit(gc.data,60) )
-      end
-    end
-  end
-end
-
 function crm.graph( n )
   local children = crm.childrenOf( n )
   for i = 1,#children do
@@ -485,13 +389,6 @@ function crm.drop()
   local l = crm.last()
   crm.db = string.sub( crm.db, 1, l )
 end
-
----- REBUILD DATABASE ----
--- Purpose, to exclude entries from the database. 
--- By extension move branches from one trunk to another. 
-
--- One solution: Parent labels must be tracked. 
--- That may be the key to avoiding fancy graphs. 
 
 function crm.rebuildFrom( keepers )
   print()

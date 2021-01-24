@@ -1,5 +1,21 @@
 local csv = {}
 
+function csv.splitCsv( str )
+  local split = { }
+  local tmp = ""
+  for i=1,#str do
+    local c = string.sub(str,i,i)
+    if c == ',' then
+      table.insert(split,tmp)
+      tmp = ""
+    else
+      tmp = tmp..c
+    end
+  end
+  table.insert(split,tmp)
+  return split
+end
+
 local function trimLine( l )
   if string.byte(l, #l) == 13 then 
     l = string.sub(l, 1, #l-1)  

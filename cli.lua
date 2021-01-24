@@ -1,16 +1,10 @@
 #!/usr/bin/lua5.3
 
-local csv = require('./lib/csv.lua')
-local crm = require('./lib/crm.lua')
+local csv  = require('./lib/csv.lua')
+local crm  = require('./lib/crm.lua')
+local misc = require('./lib/misc.lua')
 
-local usefulSymbols = "︙🞂🞍🞜"
-
-function join( a, d )
-  local s = ""
-  for i=1,(#a-1) do
-    s = s..a[i]..d
-  end return s..a[#a]
-end
+local usefulSymbols = "︙🞂🞍🞜‒❥●"
 
 function splitInput( str )
   local wrds = {}
@@ -57,28 +51,13 @@ function getInput(s)
   return io.read()
 end
 
-function max( str )
-  if #str > 72 then
-    str = string.sub(str,1,72)
-  end return str end
-
-function subset( a, b, ary )
-  local nary = {}
-  if ( a < b ) and ( b <= #ary ) then
-    for i=a,b do
-      table.insert(nary, ary[i]) 
-    end
-  end
-  return nary
-end
-
 function flatPrint( a )
   print()
   for i=1,#a do
     if type(a[i])=='table' then
       print("     --table--")
     else
-      print("  "..max((#a-i+1).."  "..a[i]))
+      print("  "..misc.limit((#a-i+1).."  "..a[i], 72))
     end
   end
 end
@@ -90,9 +69,9 @@ function prettyPrint( a )
     if num then
       local e = crm.extract(num) 
       local adr = string.format( '%8d' ,tostring(e.addr) )
-      print(adr..max( prefix..(e.label or e.data) ))
+      print(adr..misc.limit( prefix..(e.label or e.data), 72 ))
     elseif type(a)=='string' then
-      print(max( prefix..a ))
+      print(misc.limit( prefix..a, 72 ))
     elseif type(a)=='table' then
       if #a > 2 then
         prefix = prefix.."  "
@@ -241,11 +220,13 @@ words =
   ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
+  ['@:']  = function()A = crm.fetchAttrHistory(B, drops()) end, 
+  [':@']  = function()A = attrOfEveryNode(A, drops()) end, 
 -- Return Refine Array Set [[ For later implementation. ]]
   [':f'] = function() swap() A = crm.findIn(drops(), drops(), A)  end, 
   [':t'] = function() end, 
   [':a'] = function() end, 
-  ['sub']= function() swap() A = subset( drops(), drops(), A ) end, 
+  ['sub']= function() swap() A = misc.subset( drops(), drops(), A ) end, 
 -- Return Node( tree or branch )
   ['f']  = function() B = crm.addr(drops()) end, 
   ['+t'] = function() B = crm.addT(    drops() ) end, 
@@ -258,7 +239,6 @@ words =
   [".a"]  = function() flatPrint(A) end, 
   [".A"]  = function() prettyPrint(A) end, 
   [':!']  = function() swap() storeAttrAry(A, drops(), drops() ) end, 
-  [':@']  = function() print("Is this feature necessary?") end, 
 -- Input Node
   ['@'] = function() push( fetchAttr( drops(), B )) end,
   ['!'] = function() push( storeAttr(B, drops(), drops()) ) end,
@@ -299,7 +279,7 @@ words =
 
 print()
 if arg and (#arg > 0) then
-  interpret(join(arg, " "), words, stack, A, B)
+  interpret(misc.join(arg, " "), words, stack, A, B)
 else
   while state do
     prompt(stack, A, B) 
@@ -311,9 +291,9 @@ print()
 -- User Friendliness --
 -- An empty enter could generate a 2 line summary of everything.
 --   tags used
--- Reduce trim,addNoDup, and others to misc library. 
 -- flatten function
 -- Difference of sets, aka all trunks that are not tagged by __
   -- Implement as each one that returns arrays, has a positive and neg option.
 --
 
+-- next  Array element after the found one. 
