@@ -89,43 +89,32 @@ function prettyPrint( a )
   prettyInner(a)
 end
 
-function summary( e ) -- Create phone prettifier in misc, move string stuff too
-  print('\t\t', string.upper(pullAttr(e, 'company')), '\n' )
-  print('\tphone', pullAttr(e,'phone'),pullAttr(e,'city'),pullAttr(e,'address'))
-  print('\n', pullAttr(e, 'description'))
-  print("c:"..#crm.branchesOf(e))
-end
-
-function pullAttr( n, a ) --<-- Also relocate
-  a = fetchAttr(a, n)
-  if a then
-    a = crm.split(crm.extract(a).data)[2]
-  end
-  return a or "unavailable"
-end
-
-function fetchAttr( a, p ) --<-- Relocate this to lib/crm 
-  local atr = crm.attributesOf(p)
-  local mts = { }
-  for i=#atr,1,-1 do
-    local e = crm.extract(atr[i]).data
-    if crm.split(e)[1] == a then
-      table.insert(mts, atr[i])
+function summary( e ) 
+  -- refine to not include older duplicates. 
+  -- Also print the shorter elements first. 
+  atrs = crm.attributesOf( e )
+  long = { }
+  short = {}
+  for i=1,#atrs do
+    local atr = crm.split(crm.extract(atrs[i]).data)
+    if #atr[2] > 21 then
+      table.insert(long, { atr[1], atr[2] })
+    else
+      table.insert(short,{ atr[1], atr[2] })
     end
   end
-  return mts[1]
-end
-
-function storeAttr( p, b, a )
-  return crm.addL( p, a..':'..b )
-end
-
-function storeAttrAry( ary, atr, d )
-    for i=1,#ary do
-      if type(ary[i]) == 'number'then
-        crm.addL( ary[i], atr..":"..d )
-      end
-    end
+  for i=1,#short,2 do
+      local j = i + 1
+      local a1 = misc.limits(short[i][1],13,13).." : "
+               ..misc.limits(short[i][2],22,22)
+      local a2 = misc.limits(short[j][1],13,13).." : "
+               ..misc.limits(short[j][2],22,22)
+      print( a1.."  "..a2)
+  end
+  print()
+  for i=1,#long do
+    print(" "..long[i][1].." :\n \t"..long[i][2])
+  end
 end
 
 function makeAry(s) 
@@ -226,7 +215,7 @@ words =
   [':f'] = function() swap() A = crm.findIn(drops(), drops(), A)  end, 
   [':t'] = function() end, 
   [':a'] = function() end, 
-  ['sub']= function() swap() A = misc.subset( drops(), drops(), A ) end, 
+  ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
 -- Return Node( tree or branch )
   ['f']  = function() B = crm.addr(drops()) end, 
   ['+t'] = function() B = crm.addT(    drops() ) end, 
@@ -238,12 +227,13 @@ words =
   ['nth.'] = function()     push( A[drops()] ) end,
   [".a"]  = function() flatPrint(A) end, 
   [".A"]  = function() prettyPrint(A) end, 
-  [':!']  = function() swap() storeAttrAry(A, drops(), drops() ) end, 
+  [':!']  = function() swap() crm.storeAttrAry(A, drops(), drops() ) end, 
 -- Input Node
-  ['@'] = function() push( fetchAttr( drops(), B )) end,
-  ['!'] = function() push( storeAttr(B, drops(), drops()) ) end,
+  ['@'] = function() push( crm.fetchAttr( drops(), B )) end,
+  ['!'] = function() push( crm.storeAttr(B, drops(), drops()) ) end,
   ['q'] = function() prettyPrint(crm.childrenOf(B)) end, 
   ['w'] = function() summary(B) end, 
+  ['n'] = function() B = crm.next(A, B) end, 
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
   ['g'] = function() prettyPrint( crm.graph(B) ) end, 
@@ -255,14 +245,14 @@ words =
   ['kick'] = function() crm.drop()    end, 
 --Data Ops
   ['+']    = function()  add() end,
-  ['++']   = function()  adds() end,
+  ['++']   = function() adds() end,
   ["drop"] = function() drop() end, 
   ["dup"]  = function()  dup() end, 
   ["swap"] = function() swap() end, 
   ["input"]= function() push(getInput(drops())) end,
   ['slice']= function() A = slice(A, drops()) end, 
 
-  ['.']    = function() prettyPrint(drops()) end, 
+  ['.']    = function() prettyPrint(drops() or B) end, 
   [".B"]   = function() prettyPrint(B) end, 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
@@ -289,7 +279,6 @@ end
 print()
 
 -- User Friendliness --
--- An empty enter could generate a 2 line summary of everything.
 --   tags used
 -- flatten function
 -- Difference of sets, aka all trunks that are not tagged by __

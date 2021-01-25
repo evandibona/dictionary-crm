@@ -1,3 +1,4 @@
+local misc = require('./lib/misc.lua')
 local crm = {}
 crm.db = ""
 
@@ -312,14 +313,30 @@ function crm.tagsOf( n )
   return splitCsv(tags)
 end
 
-function isDup( t, n )
-  local o = false
-  n = n[1]
-  for i=1,#t do
-    if t[i][1] == n then o = true end
+function crm.fetchAttr( a, p ) --<-- Relocate this to lib/crm 
+  local atr = crm.attributesOf(p)
+  local mts = { }
+  for i=#atr,1,-1 do
+    local e = crm.extract(atr[i]).data
+    if crm.split(e)[1] == a then
+      table.insert(mts, atr[i])
+    end
   end
-  return o
+  return mts[1]
 end
+
+function crm.storeAttr( p, b, a )
+  return crm.addL( p, a..':'..b )
+end
+
+function storeAttrAry( ary, atr, d )
+    for i=1,#ary do
+      if type(ary[i]) == 'number'then
+        crm.addL( ary[i], atr..":"..d )
+      end
+    end
+end
+
 
 function crm.taggedWith( tag )
   local sec = { }
@@ -327,9 +344,7 @@ function crm.taggedWith( tag )
     function( e )
       if string.find(e.data or "","tags:") then
         local ln = { e.parent, crm.split(e.data)[2] }
-        if not isDup( sec, ln ) then
-          table.insert(sec, ln)
-        end
+        misc.addNoDup(sec, ln)
       end
     end
   )
@@ -337,7 +352,7 @@ function crm.taggedWith( tag )
   for i=1,#sec do
     local e = sec[i]
     if string.find(e[2], tag) then
-      table.insert(ary, e[1])
+      misc.addNoDup(ary, e[1])
     end
   end
   return ary
@@ -364,6 +379,14 @@ function crm.lineage( n )
     table.insert( lng, 1, n.addr )
   end
   return lng
+end
+
+function crm.next( ary, n )
+  local ptr = nil
+  for i, t in pairs(ary) do
+    if t == n then ptr = i end
+  end
+  return ary[ptr + 1]
 end
 
 function crm.print( n )

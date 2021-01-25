@@ -20,6 +20,13 @@ function m.limit( s, n )
   return s
 end
 
+function m.limits( s, n, x )
+  s = m.limit(s, x)
+  s = string.format("%"..n.."s", s)
+  return s
+end
+
+
 function m.join( ary, d )
   local s = ""
   for i=1,(#ary-1) do
@@ -48,7 +55,7 @@ function m.isInAry( ary, e )
 end
 
 function m.addNoDup( ary, e )
-  if not isInAry( ary, e ) then
+  if not m.isInAry( ary, e ) then
     table.insert( ary, e )
     return #ary
   else
