@@ -284,8 +284,9 @@ function crm.printEntries( ary )
 end
 
 function crm.split( str )
-  return { string.match(str, "(.+):"), 
-           string.match(str, ":(.+)") }
+  local mid = string.find( str, ":" )
+  return { string.sub(str, 1, mid-1),
+           string.sub(str, mid+1, #str) }
 end
 
 function crm.attributesOf( n )
@@ -386,6 +387,7 @@ function crm.next( ary, n )
   for i, t in pairs(ary) do
     if t == n then ptr = i end
   end
+  if not ary[ptr+1] then print("Current node not found in A.") end
   return ary[ptr + 1]
 end
 

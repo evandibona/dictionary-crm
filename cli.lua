@@ -95,21 +95,32 @@ function summary( e )
   atrs = crm.attributesOf( e )
   long = { }
   short = {}
-  for i=1,#atrs do
+  track = {}
+  for i=#atrs,1,-1 do
     local atr = crm.split(crm.extract(atrs[i]).data)
-    if #atr[2] > 21 then
-      table.insert(long, { atr[1], atr[2] })
-    else
-      table.insert(short,{ atr[1], atr[2] })
+    if  (atr[1]=='phone') or (atr[1]=='fax') or (atr[1]=='cell')  then
+      atr[2] = misc.formatPhone( atr[2] )
     end
+    if not misc.isInAry(track, atr[1]) then
+      if #atr[2] > 25 then
+        table.insert(long, { atr[1], atr[2] })
+      else
+        table.insert(short,{ atr[1], atr[2] })
+      end
+    end
+    table.insert(track, atr[1])
   end
   for i=1,#short,2 do
       local j = i + 1
-      local a1 = misc.limits(short[i][1],13,13).." : "
-               ..misc.limits(short[i][2],22,22)
-      local a2 = misc.limits(short[j][1],13,13).." : "
-               ..misc.limits(short[j][2],22,22)
-      print( a1.."  "..a2)
+      io.write( misc.limits(short[i][1],13,13).." : "
+              ..misc.limits(short[i][2],22,22) 
+              )
+      if short[j] then
+      io.write( misc.limits(short[j][1],13,13).." : "
+              ..misc.limits(short[j][2],22,22)
+              ) 
+      end
+      print() io.flush()
   end
   print()
   for i=1,#long do
@@ -221,12 +232,12 @@ words =
   ['+t'] = function() B = crm.addT(    drops() ) end, 
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
-  ['p']  = function() B = crm.parentOf(drops() or B) end, 
+  ['p']  = function() B = crm.parentOf(B) end, 
 -- Input Array
   ['nth'] = function() outByType( A[drops()] ) end,
   ['nth.'] = function()     push( A[drops()] ) end,
-  [".a"]  = function() flatPrint(A) end, 
-  [".A"]  = function() prettyPrint(A) end, 
+  ['.a']  = function() flatPrint(A) end, 
+  ['.A']  = function() prettyPrint(A) end, 
   [':!']  = function() swap() crm.storeAttrAry(A, drops(), drops() ) end, 
 -- Input Node
   ['@'] = function() push( crm.fetchAttr( drops(), B )) end,
@@ -237,23 +248,25 @@ words =
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
   ['g'] = function() prettyPrint( crm.graph(B) ) end, 
-  ["person-summary"] = function() end,  --phone,email,address,name
+  ['person-summary'] = function() end,  --phone,email,address,name
 --Other
-  ['B']    = function() B = drops() end, 
-  ["'"]    = function() push( tostring(drops()) ) end, 
+  ['B']     = function() B = drops() end, 
+  ['A']     = function() A = drops() end, 
+  ['A.']    = function() push( A ) end, 
+  ["'"]     = function() push( tostring(drops()) ) end, 
 --Meta
   ['kick'] = function() crm.drop()    end, 
 --Data Ops
   ['+']    = function()  add() end,
   ['++']   = function() adds() end,
-  ["drop"] = function() drop() end, 
-  ["dup"]  = function()  dup() end, 
-  ["swap"] = function() swap() end, 
-  ["input"]= function() push(getInput(drops())) end,
+  ['drop'] = function() drop() end, 
+  ['dup']  = function()  dup() end, 
+  ['swap'] = function() swap() end, 
+  ['input']= function() push(getInput(drops())) end,
   ['slice']= function() A = slice(A, drops()) end, 
 
   ['.']    = function() prettyPrint(drops() or B) end, 
-  [".B"]   = function() prettyPrint(B) end, 
+  ['.B']   = function() prettyPrint(B) end, 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
 

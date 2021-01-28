@@ -63,13 +63,15 @@ function m.addNoDup( ary, e )
   end
 end
 
-function m.printPhone( s )
+function m.formatPhone( s )
   local o = ""
   if #s > 10 then
     o = string.sub(s,1,1).."-"
     s = string.sub(s,2,#s) 
   end
-  o = o..(string.sub(s,1,3).."-"..string.sub(s,4,6).."-"..string.sub(s,7,10))
+  o = o..(
+    " ("..string.sub(s,1,3)..") "..
+    string.sub(s,4,6).."-"..string.sub(s,7,10)  )
   return o
 end
 
