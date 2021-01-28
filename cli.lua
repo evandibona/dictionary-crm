@@ -93,9 +93,9 @@ function summary( e )
   -- refine to not include older duplicates. 
   -- Also print the shorter elements first. 
   atrs = crm.attributesOf( e )
-  long = { }
-  short = {}
-  track = {}
+  long  = { }
+  short = { }
+  track = { }
   for i=#atrs,1,-1 do
     local atr = crm.split(crm.extract(atrs[i]).data)
     if  (atr[1]=='phone') or (atr[1]=='fax') or (atr[1]=='cell')  then
@@ -107,8 +107,8 @@ function summary( e )
       else
         table.insert(short,{ atr[1], atr[2] })
       end
+      table.insert(track, atr[1])
     end
-    table.insert(track, atr[1])
   end
   for i=1,#short,2 do
       local j = i + 1
