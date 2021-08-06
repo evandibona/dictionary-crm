@@ -3,6 +3,7 @@
 local csv  = require('./lib/csv.lua')
 local crm  = require('./lib/crm.lua')
 local misc = require('./lib/misc.lua')
+local scrW = 58
 local ext  = { }
 
 --[[
@@ -72,7 +73,7 @@ function flatPrint( a )
     if type(a[i])=='table' then
       print("     --table--")
     else
-      print("  "..misc.limit((#a-i+1).."  "..a[i], 72))
+      print("  "..misc.limit((#a-i+1).."  "..a[i], scrW))
     end
   end
 end
@@ -84,9 +85,9 @@ function prettyPrint( a )
     if num then
       local e = crm.extract(num) 
       local adr = string.format( '%8d' ,tostring(e.addr) )
-      print(adr..misc.limit( prefix..(e.label or e.data), 72 ))
+      print(adr..misc.limit( prefix..(e.label or e.data), scrW ))
     elseif type(a)=='string' then
-      print(misc.limit( prefix..a, 72 ))
+      print(misc.limit( prefix..a, scrW ))
     elseif type(a)=='table' then
       if #a > 2 then
         prefix = prefix.."  "
@@ -234,7 +235,7 @@ words =
   [':f'] = function() A = crm.findAll(drops(), 0, A) end,
   ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
 -- Return Node( tree or branch )
-  ['f:']  = function() A = crm.findAll(drops(),B) end, 
+  ['f:'] = function() A = crm.findAll(drops(),B) end, 
   ['+t'] = function() B = crm.addT(    drops() ) end, 
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
@@ -242,7 +243,7 @@ words =
   ['..'] = function() B = crm.parentOf(B) end, 
 -- Input Array
   ['nth'] = function() outByType( A[drops()] ) end,
-  ['nth.'] = function()     push( A[drops()] ) end,
+  ['nth.']= function()     push( A[drops()] ) end,
   ['.a']  = function() flatPrint(A) end, 
   ['.A']  = function() prettyPrint(A) end, 
   [':!']  = function() swap() crm.storeAttrAry(A, drops(), drops() ) end, 
@@ -262,8 +263,6 @@ words =
   ['A']     = function() A = drops() end, 
   ['A.']    = function() push( A ) end, 
   ["'"]     = function() push( tostring(drops()) ) end, 
---Meta
-  ['kick'] = function() crm.drop()    end, 
 --Data Ops
   ['+']    = function()  add() end,
   ['++']   = function() adds() end,
@@ -278,9 +277,15 @@ words =
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
 
+-- Experimental DB Management --
+
+--Meta
+  ['kick'] = function() crm.drop()    end, 
   ['-r'] = function() crm.dropReconstruct( A ) end, 
   ['+r'] = function() crm.keepReconstruct( A ) end, 
   ['rebuild'] = function() crm.rebuildFrom(A) words['clr']() end, 
+
+-- -- -- -- -- -- -- -- -- -- --
 
   ['aa'] = ext.aye, 
   ['bb'] = function() ext.bee() end, 

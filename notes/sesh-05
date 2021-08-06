@@ -1,0 +1,13 @@
+Functions That Need to Be Built
+
+
+  * Deconstruct Entire Database
+      eg. Translate from binary to: Lua table, json, yaml, or another format. 
+  * Index Entire Database
+  * Add New Entry
+  * Update existing entry
+  * Search DB for entry by name. 
+  * Fundamental functions: 
+    - Store: nibble, byte, word (32 bit)
+    - Fetch: nibble, byte, word (32 bit)
+    - sequential fetch/store

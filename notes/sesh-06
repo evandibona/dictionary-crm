@@ -1,0 +1,8 @@
+
+First priority is improving the input. There will always be more time for refactoring. So simple and effective is the rule. 
+
+leaf-add -node some-dude "name:John Doe"
+leaf-add some-dude "name:John Doe"
+leaf-add "string" ::::: Error: No parent specified. 
+node-add some-dude
+leaf+blk 
