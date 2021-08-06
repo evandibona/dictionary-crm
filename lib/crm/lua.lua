@@ -128,37 +128,6 @@ end
 
 ---- Array Returns ----
 
-function crm.findAll( s )
-  local all = {}
-  crm.forEachEntry(
-    function( e )
-      if looseMatch(s, (e.label or e.data)) then
-        table.insert(all, e.addr)
-      end
-    end)
-  return all
-end
-
-function crm.findIn( atr, s, ary )
-  -- This whole word and system needs to be rethought. 
-  -- It's not particularly elegant, simple, or useful. 
-  local r = {}
-  for i=1,#ary do
-    local a = crm.attributesOf( ary[i] )
-    if #a > 0 then
-      for j=1,#a do
-        local e = crm.extract(a[j])
-        if looseMatch(atr, e.data) then
-          if string.find(crm.split(e.data)[2], s) then
-            misc.addNoDup(r, e.parent )
-          end
-        end
-      end
-    end
-  end
-  return r
-end
-
 function crm.entries()
   local es = {}
   crm.forEachEntry(
@@ -269,6 +238,20 @@ function crm.originOf( n )
   return e.addr
 end
 
+function crm.findAll( s, n, ary )
+  local all = {}
+  local function fx( e )
+      if looseMatch(s, (e.label or e.data)) then
+        table.insert(all, e.addr)
+      end
+    end
+  if not n then       crm.forEachEntry( fx )
+  elseif not ary then crm.forEachChildOf( n, fx ) 
+  else for i=1,#ary do fx( crm.extract(ary[i]) ) end
+  end
+  return all
+end
+
 ---- CLI F(x)'s (Mostly) ---- Offload to other library?
 
 function crm.printEntries( ary )
@@ -373,7 +356,7 @@ function crm.graph( n )
 end
 
 function crm.lineage( n )
-  local lng = { }
+  local lng = { n }
   n = crm.extract(n)
   while not n.isTrunk do
     n = crm.extract( n.parent )
@@ -415,7 +398,76 @@ function crm.drop()
   crm.db = string.sub( crm.db, 1, l )
 end
 
-function crm.rebuildFrom( keepers )
+function crm.prune( chopThese )
+  local set = { }
+  for eye, keeper in pairs( keep ) do
+    local lvl = #crm.lineage(keeper)
+    if not set[lvl] then set[lvl] = { } end
+    local inr = set[lvl]
+    table.insert(inr, keeper)
+    set[lvl] = inr
+  end
+-- The basic challenge is: I need to be able to drop the occasional tree
+-- But I also need to be able to prune the occasional branch. 
+
+  return set
+end
+
+local function construct( s )
+  -- Take the raw data in the form of an array, and populate the database 
+  -- from it. 
+  s = 
+  {
+    { 
+      { 'tree1', 1611835782 }, 
+      { 'tree2', 1611805978 }, 
+    }, 
+    { 
+      { 'tree1', 'branch1', 1611806778 }, 
+      { 'tree2', 'branch2', 1611869167 }, 
+      { 'tree2', 'branch3', 1611815078 }, 
+    }, 
+    { 
+      { 'branch1', 'leaf1', 1611847641 }, 
+      { 'tree1',   'leaf2', 1611847770 }, 
+      { 'branch3', 'leaf3', 1611798242 }, 
+      { 'branch3', 'leaf4', 1611830105 }, 
+      { 'branch3', 'leaf5', 1611835768 }, 
+    }, 
+  }
+
+  for ix, lvl in pairs( s ) do
+    for a=1,ix do io.write("  ") end io.flush()
+    for i, entry in pairs( lvl ) do
+      if #entry==2 then
+        print( crm.addT(entry[1], entry[2]) )
+      elseif #entry==3 then
+        print( crm.addL( crm.addr(entry[1]), entry[2], entry[3] ) )
+      end
+    end
+  end
+end
+
+function crm.dropReconstruct( A )
+  local struct = { }
+  local stack  = crm.trunks() -- >>123>> first in, first out
+  local nstack = crm.trunks()
+  local lvl = 1
+  while #stack > 0 do
+    for i=1,#stack do
+      print( '::::::>', i, stack[i] )
+      local e = crm.extract(stack[i])
+      print( e.label or e.data )
+      print( table.remove(nstack) )
+    end
+    stack = nstack
+  end
+end
+
+function crm.keepReconstruct( A )
+end
+
+function crm.rebuildFrom( )
   print()
   local new = { }
   table.sort(keepers, function(i,j) return i > j end)

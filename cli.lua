@@ -3,8 +3,23 @@
 local csv  = require('./lib/csv.lua')
 local crm  = require('./lib/crm.lua')
 local misc = require('./lib/misc.lua')
+local ext  = { }
 
-local usefulSymbols = "︙🞂🞍🞜‒❥●"
+--[[
+  I want this to be plug and play. I don't want it to require a separate set
+  up for each individual db and subject matter it handles. 
+  That said, being able to craft specific scripts for each domain is also 
+  important. 
+  So the best solution (I think) will be to package each domain into its own
+  directory. With a Lua script, database, and various backups. 
+
+  Should I remove the interpret from command line arguments?
+  I think so. Besides, can't I use a pipe?
+
+  First, I still need to handle the repacking. My idea needs to be tried. 
+--]]
+
+local usefulSymbols = "︙🞂🞍🞜‒❥●│├─"
 
 function splitInput( str )
   local wrds = {}
@@ -174,23 +189,15 @@ function exitSave()
   return false
 end
 
-function help()
-  flatPrint({ 
-    " Return Ary  : Return Node : Take Ary    : Take Node   : Other       ",
-    " all         |  f find     | .A Print    | .B          | .  p top    ",
-    " trunks      | +t addTrunk | nth Idx     |  ! strAtr   | .s p stack  ",
-    " childrenOf  | +b addBranch| A! !Atr2Ech |  @ fchAtr   |  clr        ",
-    ' graph       | +b> " &rtrn |             |             |             ',
-    " lineage     |             |             |             |             ",
-    " branchesOf  |             |             |             |             " 
-  })
-end
-
 function interpret(raw, words, s, a, b) --move above words
   raw = splitInput( raw )
   for ix=1,#raw do
     local chunk = raw[ix] 
-    if words[chunk] ~= nil then
+    if ext[chunk] ~= nil then
+      ext.A, ext.B, ext.S = a, b, s
+      ext.crm, ext.misc, ext.csv = crm, misc, csv
+      ext[chunk]()
+    elseif words[chunk] ~= nil then
       words[chunk]()
     elseif tonumber(chunk) ~= nil then
       table.insert(s, tonumber(chunk))
@@ -204,7 +211,6 @@ function interpret(raw, words, s, a, b) --move above words
   end
 end
 
-crm.open("data.db")
 stack = {}
 A = {}
 B = 0
@@ -216,29 +222,31 @@ words =
   ['a']  = function() A = crm.entries()  end, 
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
-  ['f:'] = function() A = crm.findAll(drops()) end, 
+  ['f::']= function() A = crm.findAll(drops()) end, 
   ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
-  ['@:']  = function()A = crm.fetchAttrHistory(B, drops()) end, 
-  [':@']  = function()A = attrOfEveryNode(A, drops()) end, 
+  ['@:'] = function() A = crm.fetchAttrHistory(B, drops()) end, 
+  [':@'] = function() A = attrOfEveryNode(A, drops()) end, 
 -- Return Refine Array Set [[ For later implementation. ]]
-  [':f'] = function() swap() A = crm.findIn(drops(), drops(), A)  end, 
   [':t'] = function() end, 
   [':a'] = function() end, 
+  [':f'] = function() A = crm.findAll(drops(), 0, A) end,
   ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
 -- Return Node( tree or branch )
-  ['f']  = function() B = crm.addr(drops()) end, 
+  ['f:']  = function() A = crm.findAll(drops(),B) end, 
   ['+t'] = function() B = crm.addT(    drops() ) end, 
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
   ['p']  = function() B = crm.parentOf(B) end, 
+  ['..'] = function() B = crm.parentOf(B) end, 
 -- Input Array
   ['nth'] = function() outByType( A[drops()] ) end,
   ['nth.'] = function()     push( A[drops()] ) end,
   ['.a']  = function() flatPrint(A) end, 
   ['.A']  = function() prettyPrint(A) end, 
   [':!']  = function() swap() crm.storeAttrAry(A, drops(), drops() ) end, 
+  [':g']  = function() for i=1,#A do prettyPrint(crm.graph(A[i])) end end,
 -- Input Node
   ['@'] = function() push( crm.fetchAttr( drops(), B )) end,
   ['!'] = function() push( crm.storeAttr(B, drops(), drops()) ) end,
@@ -262,18 +270,23 @@ words =
   ['drop'] = function() drop() end, 
   ['dup']  = function()  dup() end, 
   ['swap'] = function() swap() end, 
-  ['input']= function() push(getInput(drops())) end,
   ['slice']= function() A = slice(A, drops()) end, 
 
+  ['_']    = function() io.write('\n > ') io.flush() push( io.read() ) end, 
   ['.']    = function() prettyPrint(drops() or B) end, 
   ['.B']   = function() prettyPrint(B) end, 
   ['.s']   = function() flatPrint(stack) end, 
   ['clr']  = function() stack = {} A = {} B = 0 end,
 
+  ['-r'] = function() crm.dropReconstruct( A ) end, 
+  ['+r'] = function() crm.keepReconstruct( A ) end, 
   ['rebuild'] = function() crm.rebuildFrom(A) words['clr']() end, 
 
-  ['help'] = function() help() end, 
-  ['save'] = function() crm.save('data.db') end,
+  ['aa'] = ext.aye, 
+  ['bb'] = function() ext.bee() end, 
+  ['cc'] = function() ext.cee() end, 
+
+  ['save'] = function() crm.save(ext.fname or 'data.db') end,
   ['x']    = function()  state = false end,
   ['exit'] = function()  state = false end
 }
@@ -282,13 +295,18 @@ words =
 
 print()
 if arg and (#arg > 0) then
-  interpret(misc.join(arg, " "), words, stack, A, B)
+  ext = require(arg[1]..".lua")
+  ext.fname = arg[1].."/data.db"
+  crm.open(ext.fname)
 else
-  while state do
-    prompt(stack, A, B) 
-    interpret(io.read(), words, stack, A, B)
-  end
+  crm.open("data.db")
 end
+
+while state do
+  prompt(stack, A, B) 
+  interpret(io.read(), words, stack, A, B)
+end
+
 print()
 
 -- User Friendliness --
