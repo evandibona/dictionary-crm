@@ -306,7 +306,7 @@ function crm.fetchAttr( a, p ) --<-- Relocate this to lib/crm
       table.insert(mts, atr[i])
     end
   end
-  return mts[1]
+  return mts[1] 
 end
 
 function crm.storeAttr( p, b, a )

@@ -169,6 +169,13 @@ function swap()     local x = drops() local y = drops() push(x) push(y) end
 function drops( s ) local e = stack[#stack] drop() return e end
 function adds( )    stack[#stack] = stack[#stack] + stack[#stack-1] end
 
+function getStr( prompt )
+  local prompt = prompt or ""
+  io.write('\n'..prompt..'> ') 
+  io.flush() 
+  return io.read() 
+end
+
 function slice( ary, n )
   print("not implemented")
   -- Get inner table 'n' times, until level == n. 
@@ -218,6 +225,18 @@ B = 0
 state = true
 words = 
 {
+
+-- Ease of Use
+  ['company'] = function() crm.addL(B, 'company:'..getStr('company')) end,
+  ['address'] = function() crm.addL(B, 'address:'..getStr('address')) end,
+  ['phone'] =   function() crm.addL(B, 'phone:'..getStr('phone')) end,
+  ['state'] =   function() crm.addL(B, 'state:'..getStr('state')) end,
+  ['title'] =   function() crm.addL(B, 'title:'..getStr('title')) end,
+  ['name' ] =   function() crm.addL(B, 'first:'..getStr('first')) 
+                           crm.addL(B,  'last:'..getStr( 'last')) end,
+  ['city'] =    function() crm.addL(B, 'city:'..getStr('city')) end,
+  ['note'] =    function() crm.addL(B, 'note:'..getStr('note')) end,
+  ['url'] =     function() crm.addL(B, 'url:'..getStr('url')) end,
 -- Return Array, Collect
   ['}']  = function() stack = makeAry(stack) A = drops() end, 
   ['a']  = function() A = crm.entries()  end, 
@@ -242,8 +261,8 @@ words =
   ['p']  = function() B = crm.parentOf(B) end, 
   ['..'] = function() B = crm.parentOf(B) end, 
 -- Input Array
-  ['nth'] = function() outByType( A[drops()] ) end,
-  ['nth.']= function()     push( A[drops()] ) end,
+  -- ['nth'] = function() outByType( A[drops()] ) end,
+  ['nth']= function()     push( A[drops()] ) end,
   ['.a']  = function() flatPrint(A) end, 
   ['.A']  = function() prettyPrint(A) end, 
   [':!']  = function() swap() crm.storeAttrAry(A, drops(), drops() ) end, 
@@ -271,7 +290,7 @@ words =
   ['swap'] = function() swap() end, 
   ['slice']= function() A = slice(A, drops()) end, 
 
-  ['_']    = function() io.write('\n > ') io.flush() push( io.read() ) end, 
+  ['_']    = function() push( getStr() ) end, 
   ['.']    = function() prettyPrint(drops() or B) end, 
   ['.B']   = function() prettyPrint(B) end, 
   ['.s']   = function() flatPrint(stack) end, 
@@ -322,3 +341,18 @@ print()
 --
 
 -- next  Array element after the found one. 
+
+-- Pretty Printing needs to all be isolated to a library. 
+-- Definitely need an inline way of handling long strings. 
+  -- _ has its limits
+-- "crm.split()" needs to be changed to misc.split
+-- Search by content, not just data. 
+-- Create array of content of a specific tag. 
+--    note :@:   or   note @:
+-- define f as finding the first entry which matches. 
+-- Change +b so that it defaults to _ if the stack is empty. 
+-- get good at listing employees, aka, branches and their leaves.
+-- get good at displaying a company log. Events and Notes with times.
+-- make sure Tags, Events, and Notes all have words to manage them.
+-- Word for 'nullifying' an entry.
+--  Date zeroed, gets ignored on rebuild. 

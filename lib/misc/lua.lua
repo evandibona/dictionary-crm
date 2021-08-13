@@ -20,6 +20,14 @@ function m.limit( s, n )
   return s
 end
 
+function m.flatten( s, n )
+  s = m.limit(s, n)
+  while #s < n do
+    s = s.." "
+  end
+  return s
+end
+
 function m.limits( s, n, x )
   s = m.limit(s, x)
   s = string.format("%"..n.."s", s)
@@ -36,10 +44,15 @@ end
 
 function m.subset( ary, a, b )
   local nary = {}
-  if ( a < b ) and ( b <= #ary ) then
+  a = a + 1
+  b = b + 1
+  if b > #ary then b = #ary end
+  if ( a <= b ) then
     for i=a,b do
       table.insert(nary, ary[i]) 
     end
+  elseif a == b then
+    nary = { ary[b] }
   end
   return nary
 end

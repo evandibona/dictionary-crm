@@ -74,6 +74,20 @@ function csv.forEachLine( f )
   end
 end
 
+function csv.appendLine( ln )
+  table.insert( csv.lines, #csv.lines+1, ln )
+end
+
+function csv.writeNew( n )
+  local file = io.open(n, "w")
+  csv.forEachLine(
+    function( line )
+      file:write(line..string.char(10))
+    end
+  )
+  file:close()
+end
+
 function csv.open( n )
   csv.lines = fileToLines( n )
   csv.forEachLineI(
