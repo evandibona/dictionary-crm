@@ -242,7 +242,7 @@ words =
   ['a']  = function() A = crm.entries()  end, 
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
-  ['f::']= function() A = crm.findAll(drops()) end, 
+  ['f:']= function() A = crm.findAll(drops()) end, 
   ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
@@ -254,7 +254,7 @@ words =
   [':f'] = function() A = crm.findAll(drops(), 0, A) end,
   ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
 -- Return Node( tree or branch )
-  ['f:'] = function() A = crm.findAll(drops(),B) end, 
+  ['f'] = function() B = crm.findAll(drops())[1] end, 
   ['+t'] = function() B = crm.addT(    drops() ) end, 
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 

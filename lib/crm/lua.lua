@@ -240,6 +240,7 @@ end
 
 function crm.findAll( s, n, ary )
   local all = {}
+  s = s or ""
   local function fx( e )
       if looseMatch(s, (e.label or e.data)) then
         table.insert(all, e.addr)

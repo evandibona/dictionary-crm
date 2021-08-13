@@ -53,9 +53,10 @@ local function getAttributes( p )
   return sorted
 end
 
-local calls = #trees
 local cstart = 1
-local cend = 1
+local cend = 3
+  if cend > #trees then cend = #trees end
+print("\n\n\n\n\n\n")
 print("\t","-------------------------")
 print("\t","|      Phone Time!      |")
 print("\t","|    "..(cend-cstart).."+ calls to make   |")
@@ -66,29 +67,35 @@ for i=cstart,cend do
   local t = trees[i]
   local tree = getAttributes(t)
   local lbl = tree.company or crm.extract( t ).label
-  print( misc.flatten( lbl, 29 ), 
+  print( "  "..misc.flatten( lbl, 29 ), 
     (tree.city or "")..", "..(tree.state or ""))
-  for i=1,#tree.phones do
-    io.write("  "..tree.phones[i])
+  if #tree.phones > 0 then
+    print( "", "  "..table.concat(tree.phones, "  ") )
   end
-  print()
+
   local emps = crm.branchesOf( t )
   for ie=1,#emps do
     local emp = getAttributes( emps[ie] )
     local enm = crm.extract( emps[ie] ).data
       emp.title = emp.title or ""
 
-    if emp.state or emp.city then
-      emp.loc = ( emp.city or "" )..", "..( emp.state or "")
-    end
     print("", enm..", "..emp.title)
-    print("\t  "..(emp.loc or ""))
-    for j=1,#emp.phones do
-      print("\t", emp.phones[j])
+    if emp.state and emp.city then
+      print("\t  "..emp.state..", "..emp.city)
+    end
+    if #emp.phones > 0 then
+      print("", "  "..table.concat(emp.phones, "  "))
+    end
+    if #emp.notes > 0 then
+      for k=1,#emp.notes do
+        print("", "  ".. 
+          emp.notes[k][2], "\n", "    ".. 
+          emp.notes[k][1])
+      end
     end
   end
+  print()
 
-  print('\n')
 end
 
   --print( tree.label, nabAtr("city", t)..", "..nabAtr("state", t) )
