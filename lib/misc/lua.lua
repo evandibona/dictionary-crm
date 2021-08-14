@@ -76,6 +76,18 @@ function m.addNoDup( ary, e )
   end
 end
 
+function m.removeDups( ary )
+  table.sort(ary)
+  local ay = {}
+  local a, b = 0, 1
+  while b <= #ary do
+    a=a+1 b=b+1
+    if ary[a] ~= ary[b] then
+      table.insert(ay,ary[a])
+    end 
+  end return ay
+end
+
 function m.formatPhone( s )
   local o = ""
   if #s > 10 then

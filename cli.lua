@@ -53,7 +53,7 @@ function splitInput( str )
 end
 
 function prompt(s, a, b)
-  io.write(#a.." 《")
+  io.write(#(a or { }).." 《")
   for i=#s-2,#s,1 do
     if s[i] then io.write('■ ') else io.write('□ ') end
   end
@@ -333,11 +333,14 @@ words =
   ['A']     = function() A = drops() end, 
   ['A.']    = function() push( A ) end, 
   ["'"]     = function() push( tostring(drops()) ) end, 
---Data Ops
+--Stack Ops
   ['+']    = function()  add() end,
   ['++']   = function() adds() end,
   ['drop'] = function() drop() end, 
   ['dup']  = function()  dup() end, 
+--Ary Ops
+  ['alf']  = function() table.sort(A) end, 
+  ['rdup'] = function() A = misc.removeDups(A) end, 
   ['swap'] = function() swap() end, 
   ['flip'] = function() A = flip(A) end, 
 
