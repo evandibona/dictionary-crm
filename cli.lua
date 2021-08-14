@@ -71,7 +71,7 @@ function flatPrint( a )
   print()
   for i=1,#a do
     if type(a[i])=='table' then
-      print("     --table--")
+      print("     table<"..#a[i]..">")
     else
       print("  "..misc.limit((#a-i+1).."  "..a[i], scrW))
     end
@@ -118,7 +118,7 @@ function makeAry(s)
       i = i - 1
     end
   end
-  table.insert(s, a)
+  table.insert(s, flip(a))
   return s
 end
 
@@ -216,6 +216,42 @@ function flip(ary)
   return yra
 end
 
+function aMinusA(a, b)
+  local i = 0
+  while(i<#a) do
+    i=i+1
+    local j = 0
+    while(j<#b) do
+      j=j+1
+      if a[i]==b[j] then 
+        table.remove(b,j)
+        table.remove(a,i) i=i-1
+        j = #b end
+    end
+  end
+  return a
+end
+
+function aMinusAaa(a, b)
+  print()
+  local c = {}
+  for i=1,#a do
+    local j = 0
+    repeat
+      j = j+1
+      io.write(a[i]..b[j]..":: ")
+      if a[i]==b[j] then 
+        io.write("*")
+        table.insert(c,a[i])
+        j = #b end
+    until(j==#b)
+    io.flush()
+    print()
+  end
+  return c
+end
+
+
 function push( n )  stack[#stack+1] = n     end
 function dup ()     push( stack[#stack] ) end
 function drop()     stack[#stack] = nil     end
@@ -286,7 +322,7 @@ words =
   ['note'] =    function() crm.addL(B, 'note:'..getStr('note')) end,
   ['url'] =     function() crm.addL(B, 'url:'..getStr('url')) end,
 -- Return Array, Collect
-  ['}']  = function() stack = makeAry(stack) A = drops() end, 
+  ['}']  = function() stack = makeAry(stack) end, 
   ['a']  = function() A = crm.entries()  end, 
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
@@ -303,6 +339,7 @@ words =
     local a={} for i=1,#A do table.insert(a,A[i][2]) end A=a end, 
 -- Return Refine Array Set [[ For later implementation. ]]
   [':f'] = function() A = crm.findAll(drops(), 0, A) end,
+  [':n:']= function() A = aMinusA( drops(), A ) end,
   ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
 -- Return Node( tree or branch )
   ['f']  = function() B = crm.findAll(drops())[1] end, 
@@ -310,8 +347,6 @@ words =
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
   ['p']  = function() B = crm.parentOf(B) end, 
-  ['>']  = function() B = A[#A] A[#A] = nil end, 
-  ['<']  = function() A[#A+1] = B B = nil end, 
   ['..'] = function() B = crm.parentOf(B) end, 
 -- Input Array
   -- ['nth'] = function() outByType( A[drops()] ) end,
@@ -330,7 +365,6 @@ words =
   ['person-summary'] = function() end,  --phone,email,address,name
 --Other
   ['B']     = function() B = drops() end, 
-  ['A']     = function() A = drops() end, 
   ['A.']    = function() push( A ) end, 
   ["'"]     = function() push( tostring(drops()) ) end, 
 --Stack Ops
@@ -339,6 +373,10 @@ words =
   ['drop'] = function() drop() end, 
   ['dup']  = function()  dup() end, 
 --Ary Ops
+  ['A']    = function() A = drops() end, 
+  ['>']    = function() B = A[#A] A[#A] = nil end, 
+  ['<']    = function() A[#A+1] = B B = nil end, 
+  ['A>']   = function() push( A ) A = { } end,
   ['alf']  = function() table.sort(A) end, 
   ['rdup'] = function() A = misc.removeDups(A) end, 
   ['swap'] = function() swap() end, 
@@ -419,6 +457,7 @@ print()
 -- Word for 'nullifying' an entry.
 --  Date zeroed, gets ignored on rebuild. 
 -- Work on the other 2 uses of the findAll function
+-- All of these array operations need their own library
 
 
 ---
