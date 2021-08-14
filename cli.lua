@@ -89,13 +89,13 @@ function prettyPrint( a )
     elseif type(a)=='string' then
       print(misc.limit( prefix..a, scrW ))
     elseif type(a)=='table' then
-      if #a > 2 then
+      if #a > 0 then
         prefix = prefix.."  "
       end
       for i=1,#a do
         prettyInner(a[i])
       end
-      if #a > 2 then
+      if #a > 0 then
         prefix = string.sub(prefix, 1, #prefix-2)
       end
     else
@@ -191,6 +191,23 @@ local function summary( t )
   print("\n\n")
 end
 
+function parentsOf( a )
+  local ps = { }
+  for i=1,#a do
+    table.insert(ps, { crm.parentOf(a[i]), { a[i] } })
+  end
+  return ps
+end
+
+function lineagesOf( a )
+  local ls = { }
+  for i=1,#a do
+    local lin = crm.lineageOf(a[i])
+    table.insert(ls, { table.remove(lin,1), lin })
+  end
+  return ls
+end
+
 function flip(ary)
   yra = {}
   for i=#ary, 1, -1 do
@@ -273,10 +290,12 @@ words =
   ['a']  = function() A = crm.entries()  end, 
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
-  ['f:']= function() A = crm.findAll(drops()) end, 
+  ['f:'] = function() A = crm.findAll(drops()) end, 
   ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
+  ['p:'] = function() A = parentsOf(A) end, 
+  ['l:'] = function() A = lineagesOf(A) end,
   ['@:'] = function() print("NI:_attributesOf()") end, 
 -- Return Refine Array Set [[ For later implementation. ]]
   [':f'] = function() A = crm.findAll(drops(), 0, A) end,
@@ -302,7 +321,7 @@ words =
   ['!'] = function() push( crm.storeAttr(B, drops(), drops()) ) end,
   ['o'] = function() summary(B) end, --overview
 -- Ease
-  ['l']  = function() A = crm.lineage( B )  end, 
+  ['l']  = function() A = crm.lineageOf( B )  end, 
   ['g'] = function() prettyPrint( crm.graph(B) ) end, 
   ['person-summary'] = function() end,  --phone,email,address,name
 --Other

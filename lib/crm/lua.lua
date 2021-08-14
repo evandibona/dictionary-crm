@@ -344,7 +344,7 @@ function crm.graph( n )
   return { n, children }
 end
 
-function crm.lineage( n )
+function crm.lineageOf( n )
   local lng = { n }
   n = crm.extract(n)
   while not n.isTrunk do
@@ -377,7 +377,7 @@ end
 function crm.prune( chopThese )
   local set = { }
   for eye, keeper in pairs( keep ) do
-    local lvl = #crm.lineage(keeper)
+    local lvl = #crm.lineageOf(keeper)
     if not set[lvl] then set[lvl] = { } end
     local inr = set[lvl]
     table.insert(inr, keeper)
