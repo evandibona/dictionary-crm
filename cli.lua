@@ -458,6 +458,7 @@ print()
 --  Date zeroed, gets ignored on rebuild. 
 -- Work on the other 2 uses of the findAll function
 -- All of these array operations need their own library
+-- Search function needs work so that it can find a specific phone number.  
 
 
 ---
