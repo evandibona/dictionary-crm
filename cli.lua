@@ -297,6 +297,10 @@ words =
   ['p:'] = function() A = parentsOf(A) end, 
   ['l:'] = function() A = lineagesOf(A) end,
   ['@:'] = function() print("NI:_attributesOf()") end, 
+  ['1:'] = function() 
+    local a={} for i=1,#A do table.insert(a,A[i][1]) end A=a end, 
+  ['2:'] = function() 
+    local a={} for i=1,#A do table.insert(a,A[i][2]) end A=a end, 
 -- Return Refine Array Set [[ For later implementation. ]]
   [':f'] = function() A = crm.findAll(drops(), 0, A) end,
   ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
@@ -412,3 +416,12 @@ print()
 -- Word for 'nullifying' an entry.
 --  Date zeroed, gets ignored on rebuild. 
 -- Work on the other 2 uses of the findAll function
+
+
+---
+--- TURN PRETTY-PRINT INTO AN ITERATOR IN CRM
+---
+-- That way it can simplify graph, prettyPrint, and allow
+-- for the simple navigation of search results. 
+
+
