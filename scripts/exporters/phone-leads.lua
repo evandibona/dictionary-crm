@@ -13,48 +13,8 @@ crm.open("data.db")
 
 local trees = crm.trunks()
 
-local function nabAtr(a, p)
-  local atr = crm.fetchAttr(a, p)
-  if atr then
-    return 
-      crm.split( crm.extract(atr).data )[2]
-    else return ""
-  end
-end
-
-local function printNotes( p )
-end
-
-local function getAttributes( p )
-  local sorted    = { }
-    sorted.notes  = { }
-    sorted.phones = { }
-  local atrs = crm.attributesOf( p )
-  for i=1,#atrs do
-    local  a = crm.extract( atrs[i] )
-      a.attr = crm.split( a.data )[1]
-      a.data = crm.split( a.data )[2]
-    if a.attr == "note" then
-      table.insert(sorted.notes, {
-        os.date( "%I:%M %p  %a %b,%d", a.date ),
-        a.data
-      })
-    elseif a.attr == "phone" then
-     table.insert(sorted.phones,  
-       '('..string.sub(a.data,1,3)..')'
-       ..string.sub(a.data,4,6)
-       ..'-'..string.sub(a.data,7,10))
-    elseif a.attr == 'company' then sorted.company = a.data
-    elseif a.attr == 'title' then sorted.title = a.data
-    elseif a.attr == 'state' then sorted.state = a.data
-    elseif a.attr == 'city' then sorted.city = a.data
-    end
-  end
-  return sorted
-end
-
 local cstart = 1
-local cend = 3
+local cend = 50
   if cend > #trees then cend = #trees end
 print("\n\n\n\n\n\n")
 print("\t","-------------------------")
@@ -95,8 +55,13 @@ for i=cstart,cend do
     end
   end
   print()
+  if #tree.notes > 0 then
+    for k=1,#tree.notes do
+      print(tree.notes[k][1]
+        .."  "..tree.notes[k][2])
+    end
+  end
+  print("\n\n")
 
 end
-
-  --print( tree.label, nabAtr("city", t)..", "..nabAtr("state", t) )
 

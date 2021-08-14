@@ -105,45 +105,6 @@ function prettyPrint( a )
   prettyInner(a)
 end
 
-function summary( e ) 
-  -- refine to not include older duplicates. 
-  -- Also print the shorter elements first. 
-  atrs = crm.attributesOf( e )
-  long  = { }
-  short = { }
-  track = { }
-  for i=#atrs,1,-1 do
-    local atr = crm.split(crm.extract(atrs[i]).data)
-    if  (atr[1]=='phone') or (atr[1]=='fax') or (atr[1]=='cell')  then
-      atr[2] = misc.formatPhone( atr[2] )
-    end
-    if not misc.isInAry(track, atr[1]) then
-      if #atr[2] > 25 then
-        table.insert(long, { atr[1], atr[2] })
-      else
-        table.insert(short,{ atr[1], atr[2] })
-      end
-      table.insert(track, atr[1])
-    end
-  end
-  for i=1,#short,2 do
-      local j = i + 1
-      io.write( misc.limits(short[i][1],13,13).." : "
-              ..misc.limits(short[i][2],22,22) 
-              )
-      if short[j] then
-      io.write( misc.limits(short[j][1],13,13).." : "
-              ..misc.limits(short[j][2],22,22)
-              ) 
-      end
-      print() io.flush()
-  end
-  print()
-  for i=1,#long do
-    print(" "..long[i][1].." :\n \t"..long[i][2])
-  end
-end
-
 function makeAry(s) 
   local a = {}
   local i = #s
@@ -161,6 +122,83 @@ function makeAry(s)
   return s
 end
 
+function getAttributes( p )
+  local sorted    = { }
+    sorted.notes  = { }
+    sorted.phones = { }
+  local atrs = crm.attributesOf( p )
+  for i=1,#atrs do
+    local  a = crm.extract( atrs[i] )
+      a.attr = crm.split( a.data )[1]
+      a.data = crm.split( a.data )[2]
+    if a.attr == "note" then
+      table.insert(sorted.notes, {
+        os.date( "%I:%M %a", a.date ),
+        a.data
+      })
+    elseif a.attr == "phone" then
+     table.insert(sorted.phones,  
+       '('..string.sub(a.data,1,3)..')'
+       ..string.sub(a.data,4,6)
+       ..'-'..string.sub(a.data,7,10))
+    elseif a.attr == 'company' then sorted.company = a.data
+    elseif a.attr == 'title' then sorted.title = a.data
+    elseif a.attr == 'state' then sorted.state = a.data
+    elseif a.attr == 'city' then sorted.city = a.data
+    end
+  end
+  return sorted
+end
+
+local function summary( t ) 
+  local tree = getAttributes(t)
+  local lbl = tree.company or crm.extract( t ).label
+  print()
+  print( "  "..misc.flatten( lbl, 29 ), 
+    (tree.city or "")..", "..(tree.state or ""))
+  if #tree.phones > 0 then
+    print( "", "  "..table.concat(tree.phones, "  ") )
+  end
+
+  local emps = crm.branchesOf( t )
+  for ie=1,#emps do
+    local emp = getAttributes( emps[ie] )
+    local enm = crm.extract( emps[ie] ).data
+      emp.title = emp.title or ""
+
+    print("", enm..", "..emp.title)
+    if emp.state and emp.city then
+      print("\t  "..emp.state..", "..emp.city)
+    end
+    if #emp.phones > 0 then
+      print("", "  "..table.concat(emp.phones, "  "))
+    end
+    if #emp.notes > 0 then
+      for k=1,#emp.notes do
+        print("", "  ".. 
+          emp.notes[k][2], "\n", "    ".. 
+          emp.notes[k][1])
+      end
+    end
+  end
+  print()
+  if #tree.notes > 0 then
+    for k=1,#tree.notes do
+      print(tree.notes[k][1]
+        .."  "..tree.notes[k][2])
+    end
+  end
+  print("\n\n")
+end
+
+function flip(ary)
+  yra = {}
+  for i=#ary, 1, -1 do
+    yra[#yra+1] = ary[i]
+  end
+  return yra
+end
+
 function push( n )  stack[#stack+1] = n     end
 function dup ()     push( stack[#stack] ) end
 function drop()     stack[#stack] = nil     end
@@ -174,13 +212,6 @@ function getStr( prompt )
   io.write('\n'..prompt..'> ') 
   io.flush() 
   return io.read() 
-end
-
-function slice( ary, n )
-  print("not implemented")
-  -- Get inner table 'n' times, until level == n. 
-  -- Then remove all entries that are tables. 
-  return ary
 end
 
 function outByType( data )
@@ -246,19 +277,18 @@ words =
   ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
-  ['@:'] = function() A = crm.fetchAttrHistory(B, drops()) end, 
-  [':@'] = function() A = attrOfEveryNode(A, drops()) end, 
+  ['@:'] = function() print("NI:_attributesOf()") end, 
 -- Return Refine Array Set [[ For later implementation. ]]
-  [':t'] = function() end, 
-  [':a'] = function() end, 
   [':f'] = function() A = crm.findAll(drops(), 0, A) end,
   ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
 -- Return Node( tree or branch )
-  ['f'] = function() B = crm.findAll(drops())[1] end, 
+  ['f']  = function() B = crm.findAll(drops())[1] end, 
   ['+t'] = function() B = crm.addT(    drops() ) end, 
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
   ['p']  = function() B = crm.parentOf(B) end, 
+  ['>']  = function() B = A[#A] A[#A] = nil end, 
+  ['<']  = function() A[#A+1] = B B = nil end, 
   ['..'] = function() B = crm.parentOf(B) end, 
 -- Input Array
   -- ['nth'] = function() outByType( A[drops()] ) end,
@@ -270,9 +300,7 @@ words =
 -- Input Node
   ['@'] = function() push( crm.fetchAttr( drops(), B )) end,
   ['!'] = function() push( crm.storeAttr(B, drops(), drops()) ) end,
-  ['q'] = function() prettyPrint(crm.childrenOf(B)) end, 
-  ['w'] = function() summary(B) end, 
-  ['n'] = function() B = crm.next(A, B) end, 
+  ['o'] = function() summary(B) end, --overview
 -- Ease
   ['l']  = function() A = crm.lineage( B )  end, 
   ['g'] = function() prettyPrint( crm.graph(B) ) end, 
@@ -288,7 +316,7 @@ words =
   ['drop'] = function() drop() end, 
   ['dup']  = function()  dup() end, 
   ['swap'] = function() swap() end, 
-  ['slice']= function() A = slice(A, drops()) end, 
+  ['flip'] = function() A = flip(A) end, 
 
   ['_']    = function() push( getStr() ) end, 
   ['.']    = function() prettyPrint(drops() or B) end, 
@@ -333,12 +361,20 @@ end
 
 print()
 
+
+-- The Big To Do --
+
+-- Log Displays
+  -- All Notes, All Events
+
 -- User Friendliness --
 --   tags used
 -- flatten function
 -- Difference of sets, aka all trunks that are not tagged by __
   -- Implement as each one that returns arrays, has a positive and neg option.
---
+
+-- At some point redesign this so that anything pushed to B
+--  pops it down into the stack. 
 
 -- next  Array element after the found one. 
 
@@ -356,3 +392,4 @@ print()
 -- make sure Tags, Events, and Notes all have words to manage them.
 -- Word for 'nullifying' an entry.
 --  Date zeroed, gets ignored on rebuild. 
+-- Work on the other 2 uses of the findAll function

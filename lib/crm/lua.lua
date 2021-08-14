@@ -255,18 +255,6 @@ end
 
 ---- CLI F(x)'s (Mostly) ---- Offload to other library?
 
-function crm.printEntries( ary )
-  for i=1,#ary do
-    local e = crm.extract(ary[i])
-    if e.isTrunk then
-      io.write("● "..e.addr.." : ")
-    else
-      io.write("  ∙ "..e.addr.." : ")
-    end
-    print(e.label or e.data)
-  end
-end
-
 function crm.split( str )
   local mid = string.find( str, ":" )
   return { string.sub(str, 1, mid-1),
@@ -364,19 +352,6 @@ function crm.lineage( n )
     table.insert( lng, 1, n.addr )
   end
   return lng
-end
-
-function crm.next( ary, n )
-  local ptr = nil
-  for i, t in pairs(ary) do
-    if t == n then ptr = i end
-  end
-  if not ary[ptr+1] then print("Current node not found in A.") end
-  return ary[ptr + 1]
-end
-
-function crm.print( n )
-  crm.printEntries( { n } )
 end
 
 function crm.info( node )
