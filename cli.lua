@@ -257,6 +257,7 @@ function dup ()     push( stack[#stack] ) end
 function drop()     stack[#stack] = nil     end
 function add()      push( drops() + drops() ) end
 function swap()     local x = drops() local y = drops() push(x) push(y) end
+function top()      return stack[#stack] end
 function drops( s ) local e = stack[#stack] drop() return e end
 function adds( )    stack[#stack] = stack[#stack] + stack[#stack-1] end
 
@@ -309,18 +310,8 @@ B = 0
 state = true
 words = 
 {
-
 -- Ease of Use
-  ['company'] = function() crm.addL(B, 'company:'..getStr('company')) end,
-  ['address'] = function() crm.addL(B, 'address:'..getStr('address')) end,
-  ['phone'] =   function() crm.addL(B, 'phone:'..getStr('phone')) end,
-  ['state'] =   function() crm.addL(B, 'state:'..getStr('state')) end,
-  ['title'] =   function() crm.addL(B, 'title:'..getStr('title')) end,
-  ['name' ] =   function() crm.addL(B, 'first:'..getStr('first')) 
-                           crm.addL(B,  'last:'..getStr( 'last')) end,
-  ['city'] =    function() crm.addL(B, 'city:'..getStr('city')) end,
-  ['note'] =    function() crm.addL(B, 'note:'..getStr('note')) end,
-  ['url'] =     function() crm.addL(B, 'url:'..getStr('url')) end,
+  [':'] = function() crm.addL(B, top()..':'..getStr(drops())) end,
 -- Return Array, Collect
   ['}']  = function() stack = makeAry(stack) end, 
   ['a']  = function() A = crm.entries()  end, 
