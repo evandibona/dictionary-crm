@@ -152,7 +152,7 @@ end
 
 local function summary( t ) 
   local tree = getAttributes(t)
-  local lbl = tree.company or crm.extract( t ).label
+  local lbl = tree.company or crm.extract( t ).data
   print()
   print( "  "..misc.flatten( lbl, 29 ), 
     (tree.city or "")..", "..(tree.state or ""))
@@ -401,7 +401,7 @@ words =
 -- Main - Loop --
 
 print()
-if arg and (#arg > 0) then
+if arg and (#arg > 0) then        -- This needs to be tested and worked out. 
   ext = require(arg[1]..".lua")
   ext.fname = arg[1].."/data.db"
   crm.open(ext.fname)

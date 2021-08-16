@@ -1,0 +1,17 @@
+Time To Iterate
+
+It's been awhile, I've got a list of small annoyances, let's fix this. 
+
+
+New structure:
+  /lib/data     DB fx's and Arrays
+  /lib/repl     Everything that involves shuffling data in shorthand
+  /lib/crm      Macros and intelligence specific to business data
+  cli.lua       The handful of lines needed to define a default cli
+  my-cli.lua
+
+
+
+Benefits:
+  /lib/books    For a personal library that starts to become large. 
+  /lib/personal For tracking birthdays, money owed, time spent with who.

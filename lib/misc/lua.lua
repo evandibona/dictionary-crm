@@ -44,8 +44,6 @@ end
 
 function m.subset( ary, a, b )
   local nary = {}
-  a = a + 1
-  b = b + 1
   if b > #ary then b = #ary end
   if ( a <= b ) then
     for i=a,b do
