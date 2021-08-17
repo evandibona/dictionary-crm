@@ -89,13 +89,13 @@ function prettyPrint( a )
     elseif type(a)=='string' then
       print(misc.limit( prefix..a, scrW ))
     elseif type(a)=='table' then
-      if #a > 0 then
+      if #a > 2 then
         prefix = prefix.."  "
       end
       for i=1,#a do
         prettyInner(a[i])
       end
-      if #a > 0 then
+      if #a > 2 then
         prefix = string.sub(prefix, 1, #prefix-2)
       end
     else
@@ -152,7 +152,8 @@ end
 
 local function summary( t ) 
   local tree = getAttributes(t)
-  local lbl = tree.company or crm.extract( t ).data
+  local lbl = tree.company 
+    or crm.extract(t).label or crm.extract( t ).data
   print()
   print( "  "..misc.flatten( lbl, 29 ), 
     (tree.city or "")..", "..(tree.state or ""))
@@ -175,9 +176,7 @@ local function summary( t )
     end
     if #emp.notes > 0 then
       for k=1,#emp.notes do
-        print("", "  ".. 
-          emp.notes[k][2], "\n", "    ".. 
-          emp.notes[k][1])
+        print("", emp.notes[k][2])
       end
     end
   end
@@ -189,6 +188,20 @@ local function summary( t )
     end
   end
   print("\n\n")
+end
+
+function log()
+  -- last 20 notes, last 20 events
+  -- Or all notes & events from today. 
+  -- Or the most recent one from every tree. 
+  local events = crm.findAll("e:")
+  for i=1,#events do
+    local event = crm.extract(events[i])
+    print( 
+      os.date( "%I:%M%p  %a, %b %e", event.date ),
+      crm.split(event.data)[2], 
+      "\n")
+  end
 end
 
 function parentsOf( a )
@@ -318,18 +331,19 @@ words =
   ['t']  = function() A = crm.trunks()   end, 
   ['b']  = function() A = crm.branches() end, 
   ['f:'] = function() A = crm.findAll(drops()) end, 
-  ['t:'] = function() A = crm.taggedWith(drops()) end, 
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
   ['p:'] = function() A = parentsOf(A) end, 
   ['l:'] = function() A = lineagesOf(A) end,
-  ['@:'] = function() print("NI:_attributesOf()") end, 
+  ['#:'] = function() A = crm.taggedWith(drops()) end, 
+  ['@:'] = function() A = crm.withAttr(drops()) end, 
   ['1:'] = function() 
     local a={} for i=1,#A do table.insert(a,A[i][1]) end A=a end, 
   ['2:'] = function() 
     local a={} for i=1,#A do table.insert(a,A[i][2]) end A=a end, 
 -- Return Refine Array Set [[ For later implementation. ]]
   [':f'] = function() A = crm.findAll(drops(), 0, A) end,
+  ['f::']= function() A = crm.findAll(drops(), B) end, 
   [':n:']= function() A = aMinusA( drops(), A ) end,
   ['sub']= function() swap() A = misc.subset( A, drops(), drops() ) end, 
 -- Return Node( tree or branch )
@@ -338,17 +352,15 @@ words =
   ['+b'] = function()     crm.addL( B, drops() ) end, 
   ['+b>']= function() B = crm.addL( B, drops() ) end, 
   ['p']  = function() B = crm.parentOf(B) end, 
+  ['@'] = function() push( crm.fetchAttr( drops(), B )) end,
   ['..'] = function() B = crm.parentOf(B) end, 
 -- Input Array
   -- ['nth'] = function() outByType( A[drops()] ) end,
   ['nth']= function()     push( A[drops()] ) end,
   ['.a']  = function() flatPrint(A) end, 
   ['.A']  = function() prettyPrint(A) end, 
-  [':!']  = function() swap() crm.storeAttrAry(A, drops(), drops() ) end, 
   [':g']  = function() for i=1,#A do prettyPrint(crm.graph(A[i])) end end,
 -- Input Node
-  ['@'] = function() push( crm.fetchAttr( drops(), B )) end,
-  ['!'] = function() push( crm.storeAttr(B, drops(), drops()) ) end,
   ['o'] = function() summary(B) end, --overview
 -- Ease
   ['l']  = function() A = crm.lineageOf( B )  end, 
@@ -368,11 +380,13 @@ words =
   ['>']    = function() B = A[#A] A[#A] = nil end, 
   ['<']    = function() A[#A+1] = B B = nil end, 
   ['A>']   = function() push( A ) A = { } end,
-  ['alf']  = function() table.sort(A) end, 
+  ['|']    = function() A = crm.joinLists( A, drops() ) end, 
+  ['sort'] = function() table.sort(A) end, 
   ['rdup'] = function() A = misc.removeDups(A) end, 
   ['swap'] = function() swap() end, 
   ['flip'] = function() A = flip(A) end, 
 
+  ['log']  = function() log() end, 
   ['_']    = function() push( getStr() ) end, 
   ['.']    = function() prettyPrint(drops() or B) end, 
   ['.B']   = function() prettyPrint(B) end, 
@@ -382,16 +396,12 @@ words =
 -- Experimental DB Management --
 
 --Meta
-  ['kick'] = function() crm.drop()    end, 
-  ['-r'] = function() crm.dropReconstruct( A ) end, 
-  ['+r'] = function() crm.keepReconstruct( A ) end, 
-  ['rebuild'] = function() crm.rebuildFrom(A) words['clr']() end, 
+  ['kick']    = function() crm.drop()    end, 
+  ['rebuild'] = function() crm.rebuild() end, 
+  ['break']   = function() crm.breakdown( B ) end, 
+  ['nix']     = function() crm.nix( drops() or B ) end, 
 
 -- -- -- -- -- -- -- -- -- -- --
-
-  ['aa'] = ext.aye, 
-  ['bb'] = function() ext.bee() end, 
-  ['cc'] = function() ext.cee() end, 
 
   ['save'] = function() crm.save(ext.fname or 'data.db') end,
   ['x']    = function()  state = false end,
@@ -415,47 +425,5 @@ while state do
 end
 
 print()
-
-
--- The Big To Do --
-
--- Log Displays
-  -- All Notes, All Events
-
--- User Friendliness --
---   tags used
--- flatten function
--- Difference of sets, aka all trunks that are not tagged by __
-  -- Implement as each one that returns arrays, has a positive and neg option.
-
--- At some point redesign this so that anything pushed to B
---  pops it down into the stack. 
-
--- next  Array element after the found one. 
-
--- Pretty Printing needs to all be isolated to a library. 
--- Definitely need an inline way of handling long strings. 
-  -- _ has its limits
--- "crm.split()" needs to be changed to misc.split
--- Search by content, not just data. 
--- Create array of content of a specific tag. 
---    note :@:   or   note @:
--- define f as finding the first entry which matches. 
--- Change +b so that it defaults to _ if the stack is empty. 
--- get good at listing employees, aka, branches and their leaves.
--- get good at displaying a company log. Events and Notes with times.
--- make sure Tags, Events, and Notes all have words to manage them.
--- Word for 'nullifying' an entry.
---  Date zeroed, gets ignored on rebuild. 
--- Work on the other 2 uses of the findAll function
--- All of these array operations need their own library
--- Search function needs work so that it can find a specific phone number.  
-
-
----
---- TURN PRETTY-PRINT INTO AN ITERATOR IN CRM
----
--- That way it can simplify graph, prettyPrint, and allow
--- for the simple navigation of search results. 
 
 

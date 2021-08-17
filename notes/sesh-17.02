@@ -1,0 +1,21 @@
+Another point worth noting is that ideally, nothing is deleted. 
+
+In my original conception at least, a new database is reconstructed from the old, but nothing is deleteable directly. 
+
+Now this does have some serious challenges in allowing the computer to assess what to take and what to keep, selecting what to take, etc. 
+
+For now, having the 'nix' word, is actually very usefull. 
+  And clean. 
+
+At the end of the day maintaining simplicity is the most important thing. Keeping the code base small, structure obvious, and usefulness of words high. 
+
+That said, there may be value in mapping out these hierarchies at a higher level to keep track of what's happening, and assigning a few words to deal with the larger structures. 
+
+                        O
+            A   B   C   D   E   F   G
+           a b   b  |  abc 
+          12
+          .
+          .
+          1 2 3 4
+         ab

@@ -5,9 +5,10 @@ It's been awhile, I've got a list of small annoyances, let's fix this.
 
 New structure:
   /lib/data     DB fx's and Arrays
-  /lib/repl     Everything that involves shuffling data in shorthand
+  /lib/repl     Everything that involves live-shuffling of data 
   /lib/crm      Macros and intelligence specific to business data
-  cli.lua       The handful of lines needed to define a default cli
+  /lib/disp     Text wrap, prettyPrint, date format
+  cli.lua       Minimal code needed to define a default cli
   my-cli.lua
 
 

@@ -112,6 +112,10 @@ function crm.addL( par, dat, t )
 end
 
 local function looseMatch( a, b )
+  return ( string.find( b, a ) ~= nil )
+end
+
+local function frontMatch( a, b )
   b = string.sub(b, 1, #a)
   return a == b
 end
@@ -238,16 +242,16 @@ function crm.originOf( n )
   return e.addr
 end
 
-function crm.findAll( s, n, ary )
+function crm.findAll( s, a, ary )
   local all = {}
   s = s or ""
   local function fx( e )
-      if looseMatch(s, (e.label or e.data)) then
+      if frontMatch(s, (e.label or e.data)) then
         table.insert(all, e.addr)
       end
     end
-  if not n then       crm.forEachEntry( fx )
-  elseif not ary then crm.forEachChildOf( n, fx ) 
+  if not a then       crm.forEachEntry( fx )
+  elseif not ary then crm.forEachChildOf( a, fx ) 
   else for i=1,#ary do fx( crm.extract(ary[i]) ) end
   end
   return all
@@ -298,19 +302,6 @@ function crm.fetchAttr( a, p ) --<-- Relocate this to lib/crm
   return mts[1] 
 end
 
-function crm.storeAttr( p, b, a )
-  return crm.addL( p, a..':'..b )
-end
-
-function storeAttrAry( ary, atr, d )
-    for i=1,#ary do
-      if type(ary[i]) == 'number'then
-        crm.addL( ary[i], atr..":"..d )
-      end
-    end
-end
-
-
 function crm.taggedWith( tag )
   local sec = { }
   crm.forRevEntry(
@@ -354,6 +345,16 @@ function crm.lineageOf( n )
   return lng
 end
 
+function crm.withAttr( atr )
+  local ary = { }
+  crm.forEachEntry(function( e )
+    if (not e.isTrunk) and frontMatch(atr, e.data) then
+      table.insert(ary, crm.lineageOf(e.addr)[1])
+    end
+  end)
+  return ary
+end
+
 function crm.info( node )
   node = crm.extract( node )
   local str = node.label or node.data
@@ -374,103 +375,72 @@ function crm.drop()
   crm.db = string.sub( crm.db, 1, l )
 end
 
-function crm.prune( chopThese )
-  local set = { }
-  for eye, keeper in pairs( keep ) do
-    local lvl = #crm.lineageOf(keeper)
-    if not set[lvl] then set[lvl] = { } end
-    local inr = set[lvl]
-    table.insert(inr, keeper)
-    set[lvl] = inr
+function crm.joinLists(a, b)
+  for i=1,#b do
+    table.insert(a,b[i])
+  end return a
+end
+
+function crm.nix( e )
+  local entry = crm.extract( e )
+  local header = intToStr(entry.next)..intToStr(entry.date)
+
+  local function zeroDate( a )
+    local l = #crm.db
+    crm.db  = string.sub(crm.db, 1, a+4)
+              ..intToStr(0)
+              ..string.sub(crm.db, a+9, l)
   end
--- The basic challenge is: I need to be able to drop the occasional tree
--- But I also need to be able to prune the occasional branch. 
 
-  return set
-end
-
-local function construct( s )
-  -- Take the raw data in the form of an array, and populate the database 
-  -- from it. 
-  s = 
-  {
-    { 
-      { 'tree1', 1611835782 }, 
-      { 'tree2', 1611805978 }, 
-    }, 
-    { 
-      { 'tree1', 'branch1', 1611806778 }, 
-      { 'tree2', 'branch2', 1611869167 }, 
-      { 'tree2', 'branch3', 1611815078 }, 
-    }, 
-    { 
-      { 'branch1', 'leaf1', 1611847641 }, 
-      { 'tree1',   'leaf2', 1611847770 }, 
-      { 'branch3', 'leaf3', 1611798242 }, 
-      { 'branch3', 'leaf4', 1611830105 }, 
-      { 'branch3', 'leaf5', 1611835768 }, 
-    }, 
-  }
-
-  for ix, lvl in pairs( s ) do
-    for a=1,ix do io.write("  ") end io.flush()
-    for i, entry in pairs( lvl ) do
-      if #entry==2 then
-        print( crm.addT(entry[1], entry[2]) )
-      elseif #entry==3 then
-        print( crm.addL( crm.addr(entry[1]), entry[2], entry[3] ) )
-      end
-    end
-  end
-end
-
-function crm.dropReconstruct( A )
-  local struct = { }
-  local stack  = crm.trunks() -- >>123>> first in, first out
-  local nstack = crm.trunks()
-  local lvl = 1
-  while #stack > 0 do
-    for i=1,#stack do
-      print( '::::::>', i, stack[i] )
-      local e = crm.extract(stack[i])
-      print( e.label or e.data )
-      print( table.remove(nstack) )
-    end
-    stack = nstack
-  end
-end
-
-function crm.keepReconstruct( A )
-end
-
-function crm.rebuildFrom( )
-  print()
-  local new = { }
-  table.sort(keepers, function(i,j) return i > j end)
-
-  while #keepers > 0 do
-    local e = crm.extract(table.remove(keepers))
-    if e.isTrunk then
-      table.insert(new, { e.label, e.date })
+  if entry.isTrunk then
+    local children = crm.childrenOf(e)
+    if #children > 0 then
+      print("--> Trunks with children cannot be removed.")
     else
-      local p = crm.extract(e.parent)
-      p = p.label or p.data
-      table.insert(new, { p, e.data, e.date })
+      zeroDate( e )
     end
+  else
+    zeroDate( e )
   end
-  --- Don't do any of the checking for children or parents above. 
-  --- If a parent doesn't exist below, just leave it off. 
 
+end
+
+function crm.breakdown( e )
+  local entry = crm.extract( e )
+  print( "address: "..entry.addr)
+  print( " db len: "..#crm.db )
+  print(string.sub(crm.db, e, e+3), string.sub(crm.db, e+4, e+7))
+  print(entry.next, entry.date, entry.parent or entry.label)
+end
+
+-- crm.addT( ref, t )
+-- crm.addL( par, dat, t )
+
+function crm.rebuild()
+  print() 
+  local old = crm.entries()
+  for i=1,#old do
+    local a = old[i]
+    local e = crm.extract(a)
+    if not e.isTrunk then
+      e.parent  = crm.extract(e.parent)
+        e.parent= e.parent.label or e.parent.data 
+    end
+    old[i] = e
+  end
   crm.db = ""
-  for i,keeper in pairs(new) do
-    if #keeper == 2 then
-      crm.addT(keeper[1], keeper[2])
-    else
-      if crm.addr(keeper[1]) then
-        crm.addL(crm.addr(keeper[1]), keeper[2], keeper[3])
+  for i=1,#old do
+    local e = old[i]
+    io.write('-')
+    if e.date > 0 then
+      if e.isTrunk then
+        crm.addT( e.label, e.date )
+      else
+        crm.addL( crm.findAll(e.parent)[1], e.data, e.date )
       end
     end
   end
-end 
+  print("\t"..#crm.entries().."/"..#old.." imported.", "\n")
+end
 
 return crm
