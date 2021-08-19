@@ -413,9 +413,6 @@ function crm.breakdown( e )
   print(entry.next, entry.date, entry.parent or entry.label)
 end
 
--- crm.addT( ref, t )
--- crm.addL( par, dat, t )
-
 function crm.rebuild()
   print() 
   local old = crm.entries()

@@ -8,6 +8,7 @@ New structure:
   /lib/repl     Everything that involves live-shuffling of data 
   /lib/crm      Macros and intelligence specific to business data
   /lib/disp     Text wrap, prettyPrint, date format
+  /lib/csv      Can't forget this, combine with data? 
   cli.lua       Minimal code needed to define a default cli
   my-cli.lua
 

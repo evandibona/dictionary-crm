@@ -46,7 +46,8 @@ local function fileToLines( name )
   local lines = {}
   local i = 1
   for line in io.lines(name) do
-    lines[i] = line
+    if #line > 0 then
+      lines[i] = line end
     i = i + 1
   end
   return lines

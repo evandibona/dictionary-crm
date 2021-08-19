@@ -145,6 +145,8 @@ function getAttributes( p )
     elseif a.attr == 'title' then sorted.title = a.data
     elseif a.attr == 'state' then sorted.state = a.data
     elseif a.attr == 'city' then sorted.city = a.data
+    elseif a.attr == 'first' then sorted.first = a.data
+    elseif a.attr == 'last' then sorted.first = a.data
     end
   end
   return sorted
@@ -167,7 +169,12 @@ local function summary( t )
     local enm = crm.extract( emps[ie] ).data
       emp.title = emp.title or ""
 
-    print("", enm..", "..emp.title)
+    if emp.first or emp.last then
+      emp.fname = ", "..(emp.first or "").." "
+        ..(emp.last or "")
+    end
+
+    print("", enm..", "..emp.title..(emp.fname or ""))
     if emp.state and emp.city then
       print("\t  "..emp.state..", "..emp.city)
     end
@@ -176,15 +183,14 @@ local function summary( t )
     end
     if #emp.notes > 0 then
       for k=1,#emp.notes do
-        print("", emp.notes[k][2])
+        print("", "  "..emp.notes[k][2])
       end
     end
   end
   print()
   if #tree.notes > 0 then
     for k=1,#tree.notes do
-      print(tree.notes[k][1]
-        .."  "..tree.notes[k][2])
+      print("     🞂", tree.notes[k][2])
     end
   end
   print("\n\n")
