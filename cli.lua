@@ -19,6 +19,15 @@ local ext  = { }
 
   First, I still need to handle the repacking. My idea needs to be tried. 
 --]]
+--[[
+
+Upon startup with no database file present, have a micro wizard
+or note about it. For example, 
+No database file detected. Data fetch instructions will fail. 
+  If you would like to import a backup -->
+  If you want to start a new db then:  db-shortname +t
+
+--]]
 
 local usefulSymbols = "︙🞂🞍🞜‒❥●│├─"
 
@@ -276,7 +285,8 @@ function dup ()     push( stack[#stack] ) end
 function drop()     stack[#stack] = nil     end
 function add()      push( drops() + drops() ) end
 function swap()     local x = drops() local y = drops() push(x) push(y) end
-function top()      return stack[#stack] end
+function top()      return stack[#stack]   end
+function sec()      return stack[#stack-1] end
 function drops( s ) local e = stack[#stack] drop() return e end
 function adds( )    stack[#stack] = stack[#stack] + stack[#stack-1] end
 
@@ -330,7 +340,7 @@ state = true
 words = 
 {
 -- Ease of Use
-  [':'] = function() crm.addL(B, top()..':'..getStr(drops())) end,
+  [':'] = function() crm.addL(B, sec()..':'..drops()) end,
 -- Return Array, Collect
   ['}']  = function() stack = makeAry(stack) end, 
   ['a']  = function() A = crm.entries()  end, 
