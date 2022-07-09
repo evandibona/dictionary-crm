@@ -1,5 +1,8 @@
 # Customer Relationship Management
 
+Originally developed with Lua 5.2?
+Currently resuming development with Lua 5.3. 
+
 A small set of CRM tools written in Lua. Currently packaged as a read-eval-print loop. As it matures and the code becomes more thoughtfully arranged, it's my hope that the actual REPL can be cut down to 500 lines of code. Keeping all of the good stuff in a set of libraries. 
 
 Because in theory it ought to be equally useful as a library for a lightweight CRM interface, a web API, or for writing one-off scripts. And not just limited to business-related applications. 
