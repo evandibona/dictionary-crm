@@ -142,7 +142,7 @@ function getAttributes( p )
       a.data = crm.split( a.data )[2]
     if a.attr == "note" then
       table.insert(sorted.notes, {
-        os.date( "%I:%M %a", a.date ),
+        os.date( "%I.%p %a %b %e, '%y", a.date ), -- DATE date Date fmt here.
         a.data
       })
     elseif a.attr == "phone" then
@@ -199,7 +199,7 @@ local function summary( t )
   print()
   if #tree.notes > 0 then
     for k=1,#tree.notes do
-      print("     🞂", tree.notes[k][2])
+      print("  "..tree.notes[k][1].."  🞂 "..tree.notes[k][2])
     end
   end
   print("\n\n")
@@ -340,7 +340,8 @@ state = true
 words = 
 {
 -- Ease of Use
-  [':'] = function() crm.addL(B, sec()..':'..drops()) end,
+  [':']  = function() crm.addL(B, sec()..':'..drops()) drop() end,
+  [':+'] = function() crm.addL(B, sec()..':'..drops()) end,
 -- Return Array, Collect
   ['}']  = function() stack = makeAry(stack) end, 
   ['a']  = function() A = crm.entries()  end, 
