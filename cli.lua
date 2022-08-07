@@ -279,16 +279,26 @@ function aMinusAaa(a, b)
   return c
 end
 
+function eQuot( q )
+  interpret(q, words, stack, A, B)
+end
+function forEachE( a, q )
+  for i=1,#a do
+    push( a[i] )
+    interpret(q, words, stack, A, B)
+  end
+end
+
 
 function push( n )  stack[#stack+1] = n     end
 function dup ()     push( stack[#stack] ) end
 function drop()     stack[#stack] = nil     end
+function drops() local e = stack[#stack] drop() return e end
 function add()      push( drops() + drops() ) end
+function adds( )    stack[#stack] = stack[#stack] + stack[#stack-1] end
 function swap()     local x = drops() local y = drops() push(x) push(y) end
 function top()      return stack[#stack]   end
 function sec()      return stack[#stack-1] end
-function drops( s ) local e = stack[#stack] drop() return e end
-function adds( )    stack[#stack] = stack[#stack] + stack[#stack-1] end
 
 function getStr( prompt )
   local prompt = prompt or ""
@@ -312,7 +322,7 @@ function exitSave()
 end
 
 function interpret(raw, words, s, a, b) --move above words
-  raw = splitInput( raw )
+  raw = splitInput( raw ) -- return status, don't execute if quotes used.
   for ix=1,#raw do
     local chunk = raw[ix] 
     if ext[chunk] ~= nil then
@@ -342,6 +352,7 @@ words =
 -- Ease of Use
   [':']  = function() crm.addL(B, sec()..':'..drops()) drop() end,
   [':+'] = function() crm.addL(B, sec()..':'..drops()) end,
+  [':}'] = function() forEachE(A, drops()) end,
 -- Return Array, Collect
   ['}']  = function() stack = makeAry(stack) end, 
   ['a']  = function() A = crm.entries()  end, 
@@ -351,7 +362,8 @@ words =
   ['b:'] = function() A = crm.branchesOf(B) end, 
   ['c:'] = function() A = crm.childrenOf(B) end, 
   ['p:'] = function() A = parentsOf(A) end, 
-  ['l:'] = function() A = lineagesOf(A) end,
+  ['L:'] = function() A = lineagesOf(A) end,
+  ['l:'] = function() A = crm.lineageOf( B )  end, 
   ['#:'] = function() A = crm.taggedWith(drops()) end, 
   ['@:'] = function() A = crm.withAttr(drops()) end, 
   ['1:'] = function() 
@@ -380,7 +392,6 @@ words =
 -- Input Node
   ['o'] = function() summary(B) end, --overview
 -- Ease
-  ['l']  = function() A = crm.lineageOf( B )  end, 
   ['g'] = function() prettyPrint( crm.graph(B) ) end, 
   ['person-summary'] = function() end,  --phone,email,address,name
 --Other
